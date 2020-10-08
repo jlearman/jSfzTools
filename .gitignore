@@ -1,0 +1,5 @@
+*.sfz
+*.sfk
+demo/Notes/*.wav
+demo/notes
+*~
