@@ -108,8 +108,8 @@ Use the following format for the prepared layer file names:
 
     <prefix>_<layername>.wav
 
-where <prefix> is anything you want, usually an abbreviation
-for the soundfont or instrument.  <layername> is also anything
+where \<prefix> is anything you want, usually an abbreviation
+for the soundfont or instrument.  \<layername> is also anything
 you want, but something that indicates to you what velocity
 the layer file samples were recorded at.
 
@@ -137,10 +137,10 @@ according to this schema:
 
 where
 
-* <prefix> is as described above.
-* <layer> is as described above.
-* <notenum> is the MIDI note number in the sample, or 000 if it can't tell.
-* <notename> is the note name in normal notation, using upper case for the note, lower case 'b' to indicate flat, and a one-digit octave number in normal MIDI parlance.
+* \<prefix> is as described above.
+* \<layer> is as described above.
+* \<notenum> is the MIDI note number in the sample, or 000 if it can't tell.
+* \<notename> is the note name in normal notation, using upper case for the note, lower case 'b' to indicate flat, and a one-digit octave number in normal MIDI parlance.
 
 The program does not handle samples outside the range of an
 88-key piano keyboard.  As you can imagine, it's also not
@@ -200,7 +200,12 @@ about this format at http://sfzformat.com .
 
 Bingo, you're done.  Test your soundfont in your favorite player.
 Make any necessary adjustments on the keymap config file and
-run the second two programs again -- just takes a moment.
+run the second program again -- just takes a moment.
+
+jMap.py also creates a .sfk file, a text file that shows the
+keyboard map.  This was originally to control creating the
+soundfont, but is now only a legacy.  But you might find it
+interesting.
 
 ##  Resample everything and start over.
 
