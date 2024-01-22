@@ -1,5 +1,9 @@
 #!/usr/bin/python
 #
+# LIcense: CC0
+#
+# NOT a good example of python coding!
+#
 # Read & dump RIFF file.
 # Make guesses about chunks
 # decode smpl chunk
@@ -11,6 +15,7 @@ majors = (
     "RIFF",
     "LIST",
     "INFO",
+    # "fLaC",   # sorry, no dice
     )
 
 dbg = True
@@ -254,7 +259,7 @@ def main(args):
         option = args[1]
         del args[1]
         if option == "-x":
-            extract = args[1] # should check for 2nd option
+            extract = args[1]
             del args[1]
             dbg = False
 

@@ -8,6 +8,7 @@
 
 # added "maybe" when not sure of pitch
 # added index to filename if it exists
+# move "maybe" to after round-robin suffix
 
 import sys
 import math
@@ -299,8 +300,9 @@ def wavename(folder, fn_prefix, mnote, notename, guess, suffix):
 	+ fn_prefix
 	+ "%03d_" % mnote
 	+ notename
-	+ ("_maybe" if guess else "")
-	+ suffix)
+	+ suffix
+	+ ("_maybe" if guess else ""))
+
     if os.path.exists(fname + ".wav"):
 	index = 1
 	while os.path.exists("%s-%d.wav" % (fname, index)):
@@ -643,8 +645,6 @@ def main(prog, args):
 prof = False
 if __name__ == "__main__":
 
-    print "HERE"
-
     warnings.filterwarnings("default", ".*")
     # warnings.filterwarnings("error", ".*")
 
@@ -655,6 +655,7 @@ if __name__ == "__main__":
     # command line mode
     rCode = main(prog, args)
     sys.exit(rCode)
+
 
     ### Maybe later.  Works but I don't like it.
 

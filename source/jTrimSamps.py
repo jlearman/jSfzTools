@@ -26,8 +26,8 @@ import jtrans
 
 # user configurable parameters
 
-_trig_db	= -12.0		# dB, trigger level
-_default_noise  = -32.0         # dB, default noise level -- FIXME
+_trig_db	= -30.0		# dB, trigger level
+_default_noise  = -40.0         # dB, default noise level -- FIXME
 
 # constants
 
@@ -285,7 +285,7 @@ def process_sample(inf, outf):
     wave.printHeader()
     rate = wave.fmt.sampleRate
 
-    if wave.fmt.compCode != 1:
+    if wave.fmt.compCode != 1 and wave.fmt.compCode != 0xfffe:
         print "Compressed formats unsupported"
         sys.exit(1)
 
