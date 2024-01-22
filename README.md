@@ -51,7 +51,8 @@ Things you'll need:
 * A wave editor -- optional but useful for noise reduction or bit depth conversion.
 * Python, download it from www.python.org and install it.  (Python
  is a scripting language like Perl.)  You may need to add it to your PATH.
-* A little ability to use the DOS command shell.
+* A little ability to use a command shell like DOS.  (I use `bash`, currently
+  under cygwin though someday I'll probably switch to WSL.)
 * A fair measure of patience and motivation (not just to use these tools, but to create a good sample set!)
 
 Installation:
