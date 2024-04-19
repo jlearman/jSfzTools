@@ -183,8 +183,10 @@ and the input wave files in the current directory (along with
 the soundfont and other control files).
 
 Example:
+```
     mkdir notes
     jCutSamps -f notes sf1_*.wav
+```
 
 Get a cup of coffee.  This one takes a while, if you have
 lots of samples and/or a slow machine.  My i7 takes about
