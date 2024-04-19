@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 
 import math
 
@@ -55,11 +55,11 @@ def notename(note):
 
     if "A" <= note[0] <= "G":
         if note[1] == "b" or note[1] == "#":
-	    if len(note) != 3:
-	        return None
-	elif len(note) > 2:
-	    return None
-	return note
+            if len(note) != 3:
+                return None
+        elif len(note) > 2:
+            return None
+        return note
 
     # Not a name, might be a number
 
@@ -79,9 +79,9 @@ def notenum(note):
         return None
 
     if name in mnote_names_flat:
-	return mnote_names_flat.index(name)
+        return mnote_names_flat.index(name)
     if name in mnote_names_sharp:
-	return mnote_names_sharp.index(name)
+        return mnote_names_sharp.index(name)
     return None
 
 
@@ -92,15 +92,15 @@ if __name__ == "__main__":
 
     if len(args) < 2:
         print "usage: %s {<note>} -- print MIDI note name/number" % args[0]
-	print
-	print "  If the argument is a number, it prints the name,"
-	print "  and vice-versa."
-	sys.exit(1)
+        print
+        print "  If the argument is a number, it prints the name,"
+        print "  and vice-versa."
+        sys.exit(1)
 
     while len(args) > 1:
-	arg = args[1]
-	del args[1]
+        arg = args[1]
+        del args[1]
 
-	print arg, "=", notename(arg), notenum(arg)
+        print arg, "=", notename(arg), notenum(arg)
 
 

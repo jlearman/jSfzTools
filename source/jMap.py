@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 # Build keyboard map for samples
 #
 # Builds soundfont key map given a set of sample files
@@ -51,24 +51,24 @@ import pprint
 
 # index constants into LAYER list
 
-LNAME		= 0
-LVEL		= 1
-LATTEN		= 2
-LLEVEL		= 3
+LNAME           = 0
+LVEL            = 1
+LATTEN          = 2
+LLEVEL          = 3
 LXFIN_LO        = 4
 LXFIN_HI        = 5
 LXFOUT_LO       = 6
 LXFOUT_HI       = 7
 
-# initializations 
+# initializations
 
 # entry structure - list of:
-#  lname	name
-#  lvel		velocity
-#  latten	sf attenuation for layer (obsolete?)
-#  llevel	amount layer was boosted by when normalized.
-#           	  If zero, velocity curve adjustment not done.
-#  lprevlevel	amount previous layer was boosted by.
+#  lname        name
+#  lvel         velocity
+#  latten       sf attenuation for layer (obsolete?)
+#  llevel       amount layer was boosted by when normalized.
+#                 If zero, velocity curve adjustment not done.
+#  lprevlevel   amount previous layer was boosted by.
 #
 # Layer entries must be ordered from softest to loudest.
 
@@ -92,11 +92,11 @@ RELEASE_RANGES = []
 # first part, 1 is the second, etc.  -1 is the last, -2 is the
 # second to last, etc.
 
-DELIMS		= " `~!@$%^&*()_+-={}|[]:\";'<>?,.\t"
-DELIMS		= " `~!@$%^&*()_+={}|[]:\";'<>?,.\t"
+DELIMS          = " `~!@$%^&*()_+-={}|[]:\";'<>?,.\t"
+DELIMS          = " `~!@$%^&*()_+={}|[]:\";'<>?,.\t"
 
-# LAYER_LOC	= -1
-# NOTE_LOC	=  2
+# LAYER_LOC     = -1
+# NOTE_LOC      =  2
 
 # Not currently configurable: RR#, if any, is last part of
 #   fname before .wav extension, separated by a dash.
@@ -105,21 +105,21 @@ DELIMS		= " `~!@$%^&*()_+={}|[]:\";'<>?,.\t"
 
 # defaults for mapping parameters
 
-MAX_LAYER_SHIFT		= 2		# don't jump layers more than this
-MAX_NOTE_SHIFT		= 7		# don't stretch pitch more than this
+MAX_LAYER_SHIFT         = 2             # don't jump layers more than this
+MAX_NOTE_SHIFT          = 7             # don't stretch pitch more than this
 
-NOTE_SHIFT_COST		= 2		# relative cost of shifing notes (vs. layers)
-LAYER_SHIFT_COST	= 1		# relative cost of shifing layers (vs. notes)
+NOTE_SHIFT_COST         = 2             # relative cost of shifing notes (vs. layers)
+LAYER_SHIFT_COST        = 1             # relative cost of shifing layers (vs. notes)
 
-EXTEND_LAYER_UP	= True		# whether better to map higher vel  sample than lower
-EXTEND_NOTE_UP	= True		# whether better to map higher note sample than lower
+EXTEND_LAYER_UP = True          # whether better to map higher vel  sample than lower
+EXTEND_NOTE_UP  = True          # whether better to map higher note sample than lower
 
-LOWEST_LEVEL	= 640		# attenuation for vel=1 notes (when using "level"), in cB
+LOWEST_LEVEL    = 640           # attenuation for vel=1 notes (when using "level"), in cB
 
 # default range for whole keyboard map
 
-LO_KEY		= jmidi.notenum("C1")	# lowest C on piano, lowest key I use
-HI_KEY		= jmidi.notenum("G7")	# highest key on MR76
+LO_KEY          = jmidi.notenum("C1")   # lowest C on piano, lowest key I use
+HI_KEY          = jmidi.notenum("G7")   # highest key on MR76
 
 ###############################################################################
 
@@ -140,11 +140,11 @@ class Samp:
 def build_grid(grid):
 
     for layer in range(0, len(LAYER)):
-	grid.append([])
+        grid.append([])
         for key in range(0, HI_KEY+MAX_NOTE_SHIFT+1):
-	    grid[layer].append(collections.OrderedDict())
+            grid[layer].append(collections.OrderedDict())
 
-	gl.layernum[LAYER[layer][LNAME]] = layer
+        gl.layernum[LAYER[layer][LNAME]] = layer
 
 def build_sampchars():
 
@@ -153,10 +153,10 @@ def build_sampchars():
 
     chars = ""
 
-    # for ichar in range(ord('"'), 0xff): 
-    for ichar in range(ord('"'), 0x7f): 
-	# if ichar not in unprintables:
-	    chars += chr(ichar)
+    # for ichar in range(ord('"'), 0xff):
+    for ichar in range(ord('"'), 0x7f):
+        # if ichar not in unprintables:
+            chars += chr(ichar)
 
     return chars
 
@@ -170,29 +170,29 @@ def load_filenames(args):
     warnings = []
     errors = []
 
-    for arg in args: 
+    for arg in args:
     #{
-	for sampfname in glob.glob(arg):
+        for sampfname in glob.glob(arg):
 
-	    if True:
-		try:
-		    sampf = file(sampfname, "rb")
-		except IOError, msg:
-		    errors.append("Can't open sample file: " + str(msg))
-		    continue
-		else:
-		    sampf.close()
+            if True:
+                try:
+                    sampf = file(sampfname, "rb")
+                except IOError, msg:
+                    errors.append("Can't open sample file: " + str(msg))
+                    continue
+                else:
+                    sampf.close()
 
-	    samp = Samp()
+            samp = Samp()
 
-	    # strip directory
-	    basename = sampfname.replace("\\", "/")
-	    basename = basename.split("/")[-1]
+            # strip directory
+            basename = sampfname.replace("\\", "/")
+            basename = basename.split("/")[-1]
 
-	    # strip ".wav" extension
-	    basename = basename.split(".")
-	    basename = ".".join(basename[0:-1])
-	    basename = jtrans.tr(basename, DELIMS, " ")
+            # strip ".wav" extension
+            basename = basename.split(".")
+            basename = ".".join(basename[0:-1])
+            basename = jtrans.tr(basename, DELIMS, " ")
 
             # get round-robin (RR) index, if any
             # FIXME: this doesn't allow hyphens in the file name!
@@ -201,79 +201,79 @@ def load_filenames(args):
             if len(parts) == 2:
                 rrob = parts[1]
 
-	    # get layer name
+            # get layer name
 
-	    parts = basename.split()
-	    if len(parts) <= abs(LAYER_LOC):
-	        loc = LAYER_LOC
-		if loc >= 0:
-		    loc += 1
-	        print >>sys.stderr, (
-		    "After splitting filename '%s' delimiters,"
-		    % (basename))
-	        print >>sys.stderr, (
-		    "there aren't enough parts to find part number %d." % loc)
-		sys.exit(1)
-	    layername  = parts[LAYER_LOC]
+            parts = basename.split()
+            if len(parts) <= abs(LAYER_LOC):
+                loc = LAYER_LOC
+                if loc >= 0:
+                    loc += 1
+                print >>sys.stderr, (
+                    "After splitting filename '%s' delimiters,"
+                    % (basename))
+                print >>sys.stderr, (
+                    "there aren't enough parts to find part number %d." % loc)
+                sys.exit(1)
+            layername  = parts[LAYER_LOC]
 
             # handle RR
             layerparts = layername.split("-")
             if len(layerparts) > 1:
                 layername = layerparts[0]
 
-	    # get note: might be MIDI number or note name
+            # get note: might be MIDI number or note name
 
-	    if len(parts) <= abs(NOTE_LOC):
-	        loc = NOTE_LOC
-		if loc >= 0:
-		    loc += 1
-	        print >>sys.stderr, (
-		    "After splitting filename '%s' at delimiters, "
-		    % (sampfname))
-	        print >>sys.stderr, (
-		    "there aren't enough parts to find part number %d." % loc)
-		sys.exit(1)
-	    notespec   = parts[NOTE_LOC]
+            if len(parts) <= abs(NOTE_LOC):
+                loc = NOTE_LOC
+                if loc >= 0:
+                    loc += 1
+                print >>sys.stderr, (
+                    "After splitting filename '%s' at delimiters, "
+                    % (sampfname))
+                print >>sys.stderr, (
+                    "there aren't enough parts to find part number %d." % loc)
+                sys.exit(1)
+            notespec   = parts[NOTE_LOC]
 
-	    mnote = jmidi.notenum(notespec)
-	    if mnote == None:
-	        print >>sys.stderr, (
-		    "Invalid MIDI note designation '%s' in '%s'"
-		    % (notespec, basename))
-		print >>sys.stderr, "Parts are:", parts
-		sys.exit(1)
+            mnote = jmidi.notenum(notespec)
+            if mnote == None:
+                print >>sys.stderr, (
+                    "Invalid MIDI note designation '%s' in '%s'"
+                    % (notespec, basename))
+                print >>sys.stderr, "Parts are:", parts
+                sys.exit(1)
             # print >>sys.stderr, "MNOTE:", mnote, "XPOSE:", TRANSPOSE
             mnote = mnote + TRANSPOSE
 
-	    # print sampfname, mnote, layername, jmidi.mnote_name(mnote)[0]
-	    samp.fname = sampfname
-	    samp.mnote = mnote
-	    samp.notename = jmidi.mnote_name(mnote, pad=None)
-	    samp.layername = layername
+            # print sampfname, mnote, layername, jmidi.mnote_name(mnote)[0]
+            samp.fname = sampfname
+            samp.mnote = mnote
+            samp.notename = jmidi.mnote_name(mnote, pad=None)
+            samp.layername = layername
             samp.rrob = rrob
-	    if layername not in gl.layernum:
-	        warnings.append("Sample for unconfigured layer '%s': %s, parts = %s"
-		    % (samp.layername, samp.fname, str(parts)))
-		continue
-	    samp.layer = gl.layernum[layername]
+            if layername not in gl.layernum:
+                warnings.append("Sample for unconfigured layer '%s': %s, parts = %s"
+                    % (samp.layername, samp.fname, str(parts)))
+                continue
+            samp.layer = gl.layernum[layername]
 
-	    if samp.layer == None:
-	        warnings.append("Sample for missing layer '%s': %s"
-		    % (samp.layername, samp.fname))
-		continue
+            if samp.layer == None:
+                warnings.append("Sample for missing layer '%s': %s"
+                    % (samp.layername, samp.fname))
+                continue
 
-	    x = LO_KEY - MAX_NOTE_SHIFT
-	    if (samp.mnote < max(0, LO_KEY - MAX_NOTE_SHIFT)
-		or samp.mnote > HI_KEY + MAX_NOTE_SHIFT):
+            x = LO_KEY - MAX_NOTE_SHIFT
+            if (samp.mnote < max(0, LO_KEY - MAX_NOTE_SHIFT)
+                or samp.mnote > HI_KEY + MAX_NOTE_SHIFT):
 
-		warnings.append("Sample outside useful note range (%s): %s" 
-		    % (samp.notename, samp.fname))
-		continue
+                warnings.append("Sample outside useful note range (%s): %s"
+                    % (samp.notename, samp.fname))
+                continue
 
-	    samp.char = None
-	    gl.samps[sampfname] = samp
-	    # gl.grid[samp.layer][mnote] = samp
-	    gl.grid[samp.layer][mnote][rrob] = samp
+            samp.char = None
+            gl.samps[sampfname] = samp
+            # gl.grid[samp.layer][mnote] = samp
+            gl.grid[samp.layer][mnote][rrob] = samp
 
     #}
 
@@ -320,13 +320,13 @@ def load_filenames(args):
     sampchars = build_sampchars()
 
     for layer in range(len(LAYER)-1, -1, -1):
-	print >>gl.ofile, (
-	    "#   Layer %*s vel %3d: "
-	    % (gl.lnamelen, LAYER[layer][LNAME], LAYER[layer][LVEL])),
+        print >>gl.ofile, (
+            "#   Layer %*s vel %3d: "
+            % (gl.lnamelen, LAYER[layer][LNAME], LAYER[layer][LVEL])),
         for mnote in range(LO_KEY, HI_KEY+1):
-	    # samps = gl.grid[layer][mnote]
+            # samps = gl.grid[layer][mnote]
 
-	    samps = gl.grid[layer][mnote]
+            samps = gl.grid[layer][mnote]
 
             if len(samps):
                 # print "SAMPS ",
@@ -334,14 +334,14 @@ def load_filenames(args):
                 samp = samps[next(iter(samps))]
                 # print "SAMP ",
                 # pprint.pprint(samp)
-		if samp.char == None:
-		    samp.char = sampchars[sampnum]
-		    sampnum += 1
-		    if sampnum >= len(sampchars):
-			sampnum = 0
-	        print >>gl.ofile, "%3s=%c" % (samp.notename, samp.char),
-	    
-	print >>gl.ofile
+                if samp.char == None:
+                    samp.char = sampchars[sampnum]
+                    sampnum += 1
+                    if sampnum >= len(sampchars):
+                        sampnum = 0
+                print >>gl.ofile, "%3s=%c" % (samp.notename, samp.char),
+
+        print >>gl.ofile
 
     print >>gl.ofile
 
@@ -367,7 +367,7 @@ def distance(torow, tocol, fromrow, fromcol):
         row_dist += 1
     elif torow < fromrow and not EXTEND_LAYER_UP:
         row_dist += 1
-   
+
     if tocol > fromcol and EXTEND_NOTE_UP:
         col_dist += 1
     elif tocol < fromcol and not EXTEND_NOTE_UP:
@@ -395,62 +395,62 @@ def assign_keys():
 
     for row in range(row_min, row_max+1):
     #{
-	# set initial window for this row pass
-	win = window(row, col_min, bounds)
+        # set initial window for this row pass
+        win = window(row, col_min, bounds)
 
-	# load initial neighbors.  Omit rightmost column (they're added below)
+        # load initial neighbors.  Omit rightmost column (they're added below)
 
-	neighbors = []	# (samp, row, col)
+        neighbors = []  # (samp, row, col)
 
-	col = 0
+        col = 0
         # note: rr here means row, not RR (round-robin)
-	for rr in range(win[0], win[1]+1):
-	    for cc in range(win[2], win[3]):
+        for rr in range(win[0], win[1]+1):
+            for cc in range(win[2], win[3]):
                 # note that nbr is a collection of RR notes
-		nbr = gl.grid[rr][cc]
-		if nbr:
-		    # print "init:", sname(next(iter(nbr)))
-		    neighbors.append((nbr, rr, cc))
+                nbr = gl.grid[rr][cc]
+                if nbr:
+                    # print "init:", sname(next(iter(nbr)))
+                    neighbors.append((nbr, rr, cc))
 
         for col in range(col_min, col_max+1):
-	#{
-	    # set new window
-	    win = window(row, col, bounds)
+        #{
+            # set new window
+            win = window(row, col, bounds)
 
-	    # add new neighbors at right of window
-	    cc = win[3]
-	    for rr in range(win[0], win[1]+1):
-	        nbr = gl.grid[rr][cc]
-		if nbr and len(nbr) > 0:
-		    # print "new: ", rr, cc, sname(next(iter(nbr)))
-		    neighbors.append((nbr, rr, cc))
+            # add new neighbors at right of window
+            cc = win[3]
+            for rr in range(win[0], win[1]+1):
+                nbr = gl.grid[rr][cc]
+                if nbr and len(nbr) > 0:
+                    # print "new: ", rr, cc, sname(next(iter(nbr)))
+                    neighbors.append((nbr, rr, cc))
 
-	    # Visit neighbors.
-	    # Discard any neighbors in old left column.
-	    # Go backwards to make deletion easy
-	    # Calculate distance and find closest neighbor.
+            # Visit neighbors.
+            # Discard any neighbors in old left column.
+            # Go backwards to make deletion easy
+            # Calculate distance and find closest neighbor.
 
-	    bestdist = 9999
-	    bestnbr = None
+            bestdist = 9999
+            bestnbr = None
 
-	    # print jmidi.mnote_name(col), len(neighbors), col, win
-	    if len(neighbors) == 0:
-	        ### print >>sys.stderr, " -- No neighbors for layer", row, "key", col
-		pass
-	    for nbrix in range(len(neighbors)-1, -1, -1):
-	        (nbr, rr, cc) = neighbors[nbrix]
-		if cc < win[2]:
-		    del neighbors[nbrix]
-		    continue
-		
-		dist = distance(rr, cc, row, col)
-		# print "  ", row, col, rr, cc, ":", dist,
-		if dist < bestdist:
-		    bestnbr = nbr
-		    bestdist = dist
+            # print jmidi.mnote_name(col), len(neighbors), col, win
+            if len(neighbors) == 0:
+                ### print >>sys.stderr, " -- No neighbors for layer", row, "key", col
+                pass
+            for nbrix in range(len(neighbors)-1, -1, -1):
+                (nbr, rr, cc) = neighbors[nbrix]
+                if cc < win[2]:
+                    del neighbors[nbrix]
+                    continue
 
-	    keymap[row][col] = bestnbr
-	#}
+                dist = distance(rr, cc, row, col)
+                # print "  ", row, col, rr, cc, ":", dist,
+                if dist < bestdist:
+                    bestnbr = nbr
+                    bestdist = dist
+
+            keymap[row][col] = bestnbr
+        #}
     #}
 
     gl.grid = keymap
@@ -466,19 +466,19 @@ def showmap(grid, layerdata):
     # Example:
     #    111111111111222222222222333333333333444444444444...
     #    CDDEEFGGAABBCDDEEFGGAABBCDDEEFGGAABBCDDEEFGGAABB...
-    #     b b  b b b  b b  b b b  b b  b b b  b b  b b b ... 
+    #     b b  b b b  b b  b b b  b b  b b b  b b  b b b ...
 
     line1 = line2 = line3 = ""
     for col in range(LO_KEY, HI_KEY+1):
         notename = jmidi.mnote_name(col, pad=None)
-	line2 += notename[0]
-	if notename[1] == "b":
-	    line3 += "b"
-	    octave = notename[2]
-	else:
-	    line3 += " "
-	    octave = notename[1]
-	line1 += octave
+        line2 += notename[0]
+        if notename[1] == "b":
+            line3 += "b"
+            octave = notename[2]
+        else:
+            line3 += " "
+            octave = notename[1]
+        line1 += octave
 
     # print "keyboard"
     print >>gl.ofile, "#", line1
@@ -489,23 +489,23 @@ def showmap(grid, layerdata):
     # print key assignments
 
     for row in range(len(layerdata)-1, -1, -1):
-	line = ""
-    	for col in range(LO_KEY, HI_KEY+1):
-	    # samp = gl.grid[row][col]
-	    samps = gl.grid[row][col]
-	    if samps and len(samps):
+        line = ""
+        for col in range(LO_KEY, HI_KEY+1):
+            # samp = gl.grid[row][col]
+            samps = gl.grid[row][col]
+            if samps and len(samps):
                 samp = samps[next(iter(samps))]
-		if samp.layer == row and samp.mnote == col:
-		    line += " "
+                if samp.layer == row and samp.mnote == col:
+                    line += " "
                 elif samp.char:
-		    line += samp.char
-		else:
-		    line += "!"
-	    else:
-		line += "!"
-	print >>gl.ofile, (
-	    "# %s Layer %-6s v=%03d"
-	    % (line, layerdata[row][LNAME], layerdata[row][LVEL]))
+                    line += samp.char
+                else:
+                    line += "!"
+            else:
+                line += "!"
+        print >>gl.ofile, (
+            "# %s Layer %-6s v=%03d"
+            % (line, layerdata[row][LNAME], layerdata[row][LVEL]))
 
     print >>gl.ofile, "#"
     print >>gl.ofile, "#  Key:"
@@ -532,7 +532,7 @@ def emit_keymap(samps, keyLo, keyHi):
             jmidi.mnote_name(keyLo, None),
             jmidi.mnote_name(keyHi, None))
 
-        print >>gl.sfzf, "<region>", 
+        print >>gl.sfzf, "<region>",
         print >>gl.sfzf, "sample=%s" % samp.fname,
         if keyLo == samp.mnote and keyHi == samp.mnote:
             print >>gl.sfzf, "key=%-3s" %jmidi.mnote_name(samp.mnote, None),
@@ -574,41 +574,41 @@ def emit_map(grid, layerdata):
     print >>gl.ofile, "RELEASE:%s" % RELEASE
 
     loVel = 1
-    # LOWEST_LEVEL = 640	# centibels	%%% SHOULD BE CONFIGURED
+    # LOWEST_LEVEL = 640        # centibels     %%% SHOULD BE CONFIGURED
     lprevl = LOWEST_LEVEL
 
     if len(SFZ_HEADERS):
         # print "HEADERS:", SFZ_HEADERS
-	print >>gl.sfzf, "\n".join(SFZ_HEADERS)
+        print >>gl.sfzf, "\n".join(SFZ_HEADERS)
         print >>gl.sfzf
 
     if len(SFZ_CONTROLS):
         # print "CONTROLS:", SFZ_CONTROLS
         print >>gl.sfzf, "<control>"
-	print >>gl.sfzf, "\n".join(SFZ_CONTROLS)
+        print >>gl.sfzf, "\n".join(SFZ_CONTROLS)
         print >>gl.sfzf
 
     if len(SFZ_MASTERS):
         # print "MASTERS:", SFZ_MASTERS
         print >>gl.sfzf, "<master>"
-	print >>gl.sfzf, "\n".join(SFZ_MASTERS)
+        print >>gl.sfzf, "\n".join(SFZ_MASTERS)
 
     for row in range(0, len(layerdata)):
     #{
-	hiVel  = layerdata[row][LVEL]
-	latten = layerdata[row][LATTEN]
-	llevel = layerdata[row][LLEVEL]
+        hiVel  = layerdata[row][LVEL]
+        latten = layerdata[row][LATTEN]
+        llevel = layerdata[row][LLEVEL]
         xfin_lo = layerdata[row][LXFIN_LO]
         xfin_hi = layerdata[row][LXFIN_HI]
         xfout_lo = layerdata[row][LXFOUT_LO]
         xfout_hi = layerdata[row][LXFOUT_HI]
 
-	print >>gl.ofile
+        print >>gl.ofile
         print >>gl.ofile, "VLAYER:%s:%3d:%3d:%2d" % (
-	    layerdata[row][LNAME], loVel, hiVel, latten)	# %%% llevel
+            layerdata[row][LNAME], loVel, hiVel, latten)        # %%% llevel
 
-	print >>gl.sfzf
-	print >>gl.sfzf, "<group>",
+        print >>gl.sfzf
+        print >>gl.sfzf, "<group>",
         if xfin_lo:
             print >>gl.sfzf, "xfin_lovel=%d xfin_hivel=%d" % (xfin_lo, xfin_hi),
         else:
@@ -616,42 +616,42 @@ def emit_map(grid, layerdata):
         if xfout_lo:
             print >>gl.sfzf, "xfout_lovel=%d xfout_hivel=%d" % (xfout_lo, xfout_hi),
         else:
-            print >>gl.sfzf, "hivel=%d" % hiVel, 
+            print >>gl.sfzf, "hivel=%d" % hiVel,
 
-	if (latten != 0):
-	    print >>gl.sfzf, "volume=%f" % (-latten/10.0)
-	print >>gl.sfzf, "ampeg_release=%f" % RELEASE
+        if (latten != 0):
+            print >>gl.sfzf, "volume=%f" % (-latten/10.0)
+        print >>gl.sfzf, "ampeg_release=%f" % RELEASE
 
-	if (llevel != 0):
-	    midVel = (hiVel + loVel) / 2
-	    midLev = (llevel + lprevl) / 2
-	    print >>gl.sfzf, "amp_velcurve_%d %f" % (loVel,  cB2scalefactor(-lprevl))
-	    print >>gl.sfzf, "amp_velcurve_%d %f" % (midVel, cB2scalefactor(-midLev))
-	    print >>gl.sfzf, "amp_velcurve_%d %f" % (hiVel,  cB2scalefactor(-llevel))
+        if (llevel != 0):
+            midVel = (hiVel + loVel) / 2
+            midLev = (llevel + lprevl) / 2
+            print >>gl.sfzf, "amp_velcurve_%d %f" % (loVel,  cB2scalefactor(-lprevl))
+            print >>gl.sfzf, "amp_velcurve_%d %f" % (midVel, cB2scalefactor(-midLev))
+            print >>gl.sfzf, "amp_velcurve_%d %f" % (hiVel,  cB2scalefactor(-llevel))
 
-	    print ("row %s velocity %3d level %3d cB, scale %f"
-	        % (layerdata[row][LNAME], loVel,  lprevl, cB2scalefactor(-lprevl)))
-	    print ("row %s velocity %3d level %3d cB, scale %f"
-	        % (layerdata[row][LNAME], midVel, midLev, cB2scalefactor(-midLev)))
-	    print ("row %s velocity %3d level %3d cB, scale %f"
-	        % (layerdata[row][LNAME], hiVel,  llevel, cB2scalefactor(-llevel)))
-	    lprevl = llevel
+            print ("row %s velocity %3d level %3d cB, scale %f"
+                % (layerdata[row][LNAME], loVel,  lprevl, cB2scalefactor(-lprevl)))
+            print ("row %s velocity %3d level %3d cB, scale %f"
+                % (layerdata[row][LNAME], midVel, midLev, cB2scalefactor(-midLev)))
+            print ("row %s velocity %3d level %3d cB, scale %f"
+                % (layerdata[row][LNAME], hiVel,  llevel, cB2scalefactor(-llevel)))
+            lprevl = llevel
 
-	lastSamps = None
+        lastSamps = None
 
-    	for col in range(LO_KEY, HI_KEY+1):
-	#{
-	    samps = gl.grid[row][col]
-	    if samps != lastSamps:
-	        if lastSamps != None:
+        for col in range(LO_KEY, HI_KEY+1):
+        #{
+            samps = gl.grid[row][col]
+            if samps != lastSamps:
+                if lastSamps != None:
                     emit_keymap(lastSamps, firstKey, col-1)
-		lastSamps = samps
-		firstKey = col
-	#}
+                lastSamps = samps
+                firstKey = col
+        #}
 
-	# handle last unfinished keymap
-	if lastSamps != None:
-	    emit_keymap(lastSamps, firstKey, col)
+        # handle last unfinished keymap
+        if lastSamps != None:
+            emit_keymap(lastSamps, firstKey, col)
 
         loVel = hiVel + 1
     #}
@@ -659,7 +659,7 @@ def emit_map(grid, layerdata):
     if len(SFZ_FINALS):
         # print "FINALS:", SFZ_FINALS
         print >>gl.sfzf
-	print >>gl.sfzf, "\n".join(SFZ_FINALS)
+        print >>gl.sfzf, "\n".join(SFZ_FINALS)
         print >>gl.sfzf
 
 
@@ -669,9 +669,9 @@ def convert_int(val, lineno):
         ival = int(val)
     except:
         print >>sys.stderr, (
-	    "Line %d: expecting integer, got '%s'"
-	    % (lineno, val))
-	sys.exit(1)
+            "Line %d: expecting integer, got '%s'"
+            % (lineno, val))
+        sys.exit(1)
     return (ival)
 
 def kwval(group, lineno):
@@ -680,11 +680,11 @@ def kwval(group, lineno):
         (kw, val) = group.split("=")
     except Exception, msg:
         print >>sys.stderr, (
-	    "Line %d: expecting 'keyword=value' format, got '%s'"
-	    % (lineno, group))
+            "Line %d: expecting 'keyword=value' format, got '%s'"
+            % (lineno, group))
         print >>sys.stderr, msg
-	raise Exception
-	sys.exit(1)
+        raise Exception
+        sys.exit(1)
     return (kw, val)
 
 def process_cfg(cfg_fname, sfname):
@@ -705,10 +705,10 @@ def process_cfg(cfg_fname, sfname):
     global TRANSPOSE
 
     try:
-	cfgf = file(cfg_fname, "r")
+        cfgf = file(cfg_fname, "r")
     except Exception, msg:
-	print >>sys.stderr, msg
-	sys.exit(1)
+        print >>sys.stderr, msg
+        sys.exit(1)
 
     # Defaults
     COMMENT = ""
@@ -724,12 +724,12 @@ def process_cfg(cfg_fname, sfname):
     SFZ_FINALS = []
 
     # entry structure - list of:
-    #  lname	name
-    #  lvel	velocity
-    #  lrange	velocity range
-    #  latten	sf attenuation for layer (obsolete?)
-    #  llevel	amount layer was boosted by when normalized.
-    #          	  If zero, velocity curve adjustment not done.
+    #  lname    name
+    #  lvel     velocity
+    #  lrange   velocity range
+    #  latten   sf attenuation for layer (obsolete?)
+    #  llevel   amount layer was boosted by when normalized.
+    #             If zero, velocity curve adjustment not done.
 
     layers = []
 
@@ -739,60 +739,60 @@ def process_cfg(cfg_fname, sfname):
     for iline in cfgf.readlines():
     #{
         line = jtrans.tr(iline.strip(), "\t", " ")
-	lineno += 1
+        lineno += 1
 
-	# skip blank line or comment
-	if len(line) == 0 or line[0] == "#":
-	    continue
+        # skip blank line or comment
+        if len(line) == 0 or line[0] == "#":
+            continue
 
-        # print >>sys.stderr, line 
+        # print >>sys.stderr, line
 
-	groups = line.split(" ")
-	cmd = groups[0]
-	for ix in range(len(groups)-1, -1, -1):
-	    if len(groups[ix]) == 0:
-	        del groups[ix]
+        groups = line.split(" ")
+        cmd = groups[0]
+        for ix in range(len(groups)-1, -1, -1):
+            if len(groups[ix]) == 0:
+                del groups[ix]
 
-	if cmd == "bankname":
-	    BANKNAME = " ".join(groups[1:])
-	    PRESETNAME = BANKNAME	# default
-	    continue
+        if cmd == "bankname":
+            BANKNAME = " ".join(groups[1:])
+            PRESETNAME = BANKNAME       # default
+            continue
 
-	if cmd == "designer":
-	    DESIGNER = " ".join(groups[1:])
-	    continue
+        if cmd == "designer":
+            DESIGNER = " ".join(groups[1:])
+            continue
 
-	if cmd == "copyright":
-	    COPYRIGHT = " ".join(groups[1:])
-	    continue
+        if cmd == "copyright":
+            COPYRIGHT = " ".join(groups[1:])
+            continue
 
-	if cmd == "comment":
-	    COMMENT += " ".join(groups[1:])
-	    continue
+        if cmd == "comment":
+            COMMENT += " ".join(groups[1:])
+            continue
 
-	if cmd == "preset":
-	    if len(groups) >= 2:
-		PRESETNAME = " ".join(groups[1:])
-	    continue
+        if cmd == "preset":
+            if len(groups) >= 2:
+                PRESETNAME = " ".join(groups[1:])
+            continue
 
         if cmd == "crossfade":
             CROSSFADE = True
             continue
 
         if cmd == "release":
-	    if len(groups) < 2:
-	        print >>sys.stderr, (
-		    "Line %d: expecting release value."
-		    % (lineno))
-		sys.exit(1)
-	    val = groups[1]
-	    try:
-		relval = float(val)
-	    except:
-	        print >>sys.stderr, (
-		    "Line %d: expecting float value for release time, got '%s'."
-		    % (lineno, val))
-		sys.exit(1)
+            if len(groups) < 2:
+                print >>sys.stderr, (
+                    "Line %d: expecting release value."
+                    % (lineno))
+                sys.exit(1)
+            val = groups[1]
+            try:
+                relval = float(val)
+            except:
+                print >>sys.stderr, (
+                    "Line %d: expecting float value for release time, got '%s'."
+                    % (lineno, val))
+                sys.exit(1)
             if len(groups) == 3:
                 # note range release level (note given is low note of range)
                 val = groups[2]
@@ -807,169 +807,169 @@ def process_cfg(cfg_fname, sfname):
 
             else:
                 # global release level
-		RELEASE = float(val)
+                RELEASE = float(val)
 
-	    continue
+            continue
 
-	if cmd == "transpose":
-	    TRANSPOSE = int(groups[1])
+        if cmd == "transpose":
+            TRANSPOSE = int(groups[1])
             print >>sys.stderr, "TRANSPOSE by", TRANSPOSE
 
-	if cmd == "header":
-	    SFZ_HEADERS.append(" ".join(groups[1:]))
+        if cmd == "header":
+            SFZ_HEADERS.append(" ".join(groups[1:]))
 
-	if cmd == "control":
-	    SFZ_CONTROLS.append(" ".join(groups[1:]))
+        if cmd == "control":
+            SFZ_CONTROLS.append(" ".join(groups[1:]))
 
-	if cmd == "global" or cmd == "master":
-	    SFZ_MASTERS.append(" ".join(groups[1:]))
+        if cmd == "global" or cmd == "master":
+            SFZ_MASTERS.append(" ".join(groups[1:]))
 
-	if cmd == "final":
-	    SFZ_FINALS.append(" ".join(groups[1:]))
+        if cmd == "final":
+            SFZ_FINALS.append(" ".join(groups[1:]))
 
-	if cmd == "layer-opts":
-	    for group in groups[1:]:
-	        if len(group) == 0:
-		    continue
+        if cmd == "layer-opts":
+            for group in groups[1:]:
+                if len(group) == 0:
+                    continue
 
-		(kw, val) = kwval(group, lineno)
+                (kw, val) = kwval(group, lineno)
 
-		if kw == "max-shift":
-		    MAX_LAYER_SHIFT = convert_int(val, lineno)
+                if kw == "max-shift":
+                    MAX_LAYER_SHIFT = convert_int(val, lineno)
 
-		elif kw == "shift-cost":
-		    LAYER_SHIFT_COST = convert_int(val, lineno)
+                elif kw == "shift-cost":
+                    LAYER_SHIFT_COST = convert_int(val, lineno)
 
-		elif kw == "extend-up":
-		    if val.upper() == "Y":
-			EXTEND_LAYER_UP = True
-		    else:
-			EXTEND_LAYER_UP = False	    continue
+                elif kw == "extend-up":
+                    if val.upper() == "Y":
+                        EXTEND_LAYER_UP = True
+                    else:
+                        EXTEND_LAYER_UP = False           continue
 
-	if cmd == "note-opts":
-	    for group in groups[1:]:
-	        if len(group) == 0:
-		    continue
+        if cmd == "note-opts":
+            for group in groups[1:]:
+                if len(group) == 0:
+                    continue
 
-		(kw, val) = kwval(group, lineno)
+                (kw, val) = kwval(group, lineno)
 
-		if kw == "max-shift":
-		    MAX_NOTE_SHIFT = convert_int(val, lineno)
+                if kw == "max-shift":
+                    MAX_NOTE_SHIFT = convert_int(val, lineno)
 
-		elif kw == "shift-cost":
-		    NOTE_SHIFT_COST = convert_int(val, lineno)
+                elif kw == "shift-cost":
+                    NOTE_SHIFT_COST = convert_int(val, lineno)
 
-		elif kw == "extend-up":
-		    if val.upper() == "Y":
-			EXTEND_NOTE_UP = True
-		    else:
-			EXTEND_NOTE_UP = False
-	    continue
+                elif kw == "extend-up":
+                    if val.upper() == "Y":
+                        EXTEND_NOTE_UP = True
+                    else:
+                        EXTEND_NOTE_UP = False
+            continue
 
 
-	if cmd == "keyboard-range":
-	    for group in groups[1:]:
-	        if len(group) == 0:
-		    continue
+        if cmd == "keyboard-range":
+            for group in groups[1:]:
+                if len(group) == 0:
+                    continue
 
-		(kw, val) = kwval(group, lineno)
+                (kw, val) = kwval(group, lineno)
 
-		if kw == "low-key":
-		    key = jmidi.notenum(val)
-		    if key == None:
-		        print >>sys.stderr, (
-			    "Line %d: expecting note name, got '%s'."
-			    % (lineno, val))
-			sys.exit(1)
-		    LO_KEY = key
-		    # print >>sys.stderr, "LO_KEY", key
+                if kw == "low-key":
+                    key = jmidi.notenum(val)
+                    if key == None:
+                        print >>sys.stderr, (
+                            "Line %d: expecting note name, got '%s'."
+                            % (lineno, val))
+                        sys.exit(1)
+                    LO_KEY = key
+                    # print >>sys.stderr, "LO_KEY", key
 
-		elif kw == "high-key":
-		    key = jmidi.notenum(val)
-		    if key == None:
-		        print >>sys.stderr, (
-			    "Line %d: expecting note name, got '%s'."
-			    % (lineno, val))
-			sys.exit(1)
-		    HI_KEY = key
-	    continue
+                elif kw == "high-key":
+                    key = jmidi.notenum(val)
+                    if key == None:
+                        print >>sys.stderr, (
+                            "Line %d: expecting note name, got '%s'."
+                            % (lineno, val))
+                        sys.exit(1)
+                    HI_KEY = key
+            continue
 
-	# sample filename format (the parts we need to know)
+        # sample filename format (the parts we need to know)
 
-	if cmd == "format":
-	    for group in groups[1:]:
+        if cmd == "format":
+            for group in groups[1:]:
 
-		(kw, val) = kwval(group, lineno)
+                (kw, val) = kwval(group, lineno)
 
-		if kw == "layer-loc":
-		    ival = convert_int(val, lineno)
-		    if ival > 0:
-		        ival -= 1
-		    LAYER_LOC = ival
+                if kw == "layer-loc":
+                    ival = convert_int(val, lineno)
+                    if ival > 0:
+                        ival -= 1
+                    LAYER_LOC = ival
 
-		elif kw == "note-loc":
-		    ival = convert_int(val, lineno)
-		    if ival > 0:
-		        ival -= 1
-		    NOTE_LOC = ival
-	    continue
+                elif kw == "note-loc":
+                    ival = convert_int(val, lineno)
+                    if ival > 0:
+                        ival -= 1
+                    NOTE_LOC = ival
+            continue
 
-	if cmd == "lowest-level":
-	    LOWEST_LEVEL = convert_int(groups[1], lineno)
-	    if (LOWEST_LEVEL < 0):
-	        print >>sys.stderr, ("Line %d: lowest-level must not be negative."
-		    % (lineno, groups[1:]))
-	    print "LOWEST_LEVEL", LOWEST_LEVEL
-	    continue
+        if cmd == "lowest-level":
+            LOWEST_LEVEL = convert_int(groups[1], lineno)
+            if (LOWEST_LEVEL < 0):
+                print >>sys.stderr, ("Line %d: lowest-level must not be negative."
+                    % (lineno, groups[1:]))
+            print "LOWEST_LEVEL", LOWEST_LEVEL
+            continue
 
-	if cmd == "layer":
-	    if len(groups) < 2:
-		print >>sys.stderr, (
-		    "Line %d: expecting layer name."
-		    % (lineno))
-		sys.exit(1)
+        if cmd == "layer":
+            if len(groups) < 2:
+                print >>sys.stderr, (
+                    "Line %d: expecting layer name."
+                    % (lineno))
+                sys.exit(1)
 
-	    lname	= groups[1]
-	    latten	= 0
-	    llevel	= 0	# no adjustment
-	    lvel	= -1
-	    lrange	= -1
+            lname       = groups[1]
+            latten      = 0
+            llevel      = 0     # no adjustment
+            lvel        = -1
+            lrange      = -1
 
-	    gl.lnamelen = max(gl.lnamelen, len(lname))
+            gl.lnamelen = max(gl.lnamelen, len(lname))
 
-	    for group in groups[2:]:
-	        if len(group) == 0:
-		    continue
+            for group in groups[2:]:
+                if len(group) == 0:
+                    continue
 
-		(kw, val) = kwval(group, lineno)
+                (kw, val) = kwval(group, lineno)
 
-		if kw == "vel":
-		    if lvmode and lvmode != "vel":
-			print >>sys.stderr, (
-			    "Line %d: can't mix 'vel' and 'vel-range' in same preset."
-			    % (lineno))
-			sys.exit(1)
-		    lvel = convert_int(val, lineno)
-		    lvmode = "vel"
+                if kw == "vel":
+                    if lvmode and lvmode != "vel":
+                        print >>sys.stderr, (
+                            "Line %d: can't mix 'vel' and 'vel-range' in same preset."
+                            % (lineno))
+                        sys.exit(1)
+                    lvel = convert_int(val, lineno)
+                    lvmode = "vel"
 
-		elif kw == "vel-range":
-		    if lvmode and lvmode != "range":
-			print >>sys.stderr, (
-			    "Line %d: can't mix 'vel' and 'vel-range' in same preset."
-			    % (lineno))
-			sys.exit(1)
-		    lrange = convert_int(val, lineno)
-		    lvmode = "range"
+                elif kw == "vel-range":
+                    if lvmode and lvmode != "range":
+                        print >>sys.stderr, (
+                            "Line %d: can't mix 'vel' and 'vel-range' in same preset."
+                            % (lineno))
+                        sys.exit(1)
+                    lrange = convert_int(val, lineno)
+                    lvmode = "range"
 
-		elif kw == "atten":
-		    latten = convert_int(val, lineno)
+                elif kw == "atten":
+                    latten = convert_int(val, lineno)
 
-		elif kw == "level":
-		    llevel = convert_int(val, lineno)
+                elif kw == "level":
+                    llevel = convert_int(val, lineno)
 
-	    layers.append((lname, lvel, lrange, latten, llevel))
+            layers.append((lname, lvel, lrange, latten, llevel))
 
-	    continue
+            continue
     #}
 
     # Are we assigning velocities?
@@ -977,69 +977,69 @@ def process_cfg(cfg_fname, sfname):
     if lvmode == "vel":
 
         # No.  Check the assignments.
-	last_lvel = -1
-	for (lname, lvel, lrange, latten, llevel) in layers:
-	    if lvel == -1:
-		print >>sys.stderr, (
-		    "No velocity assigned for layer '%s'" 
-		    % lname)
-		sys.exit(1)
-	    if lvel <= last_lvel:
-		print >>sys.stderr, (
-		    "Velocity for layer '%s' must be higher than previous layer" 
-		    % lname)
-		sys.exit(1)
-	    last_lvel = lvel
+        last_lvel = -1
+        for (lname, lvel, lrange, latten, llevel) in layers:
+            if lvel == -1:
+                print >>sys.stderr, (
+                    "No velocity assigned for layer '%s'"
+                    % lname)
+                sys.exit(1)
+            if lvel <= last_lvel:
+                print >>sys.stderr, (
+                    "Velocity for layer '%s' must be higher than previous layer"
+                    % lname)
+                sys.exit(1)
+            last_lvel = lvel
 
-	if last_lvel != 127:
-	    print >>sys.stderr, (
-		"Warning: velocity for top layer '%s' should be 127" 
-		% lname)
+        if last_lvel != 127:
+            print >>sys.stderr, (
+                "Warning: velocity for top layer '%s' should be 127"
+                % lname)
 
     else:
     #{
-	# We're assigning velocities.
+        # We're assigning velocities.
 
-	# Find how many layers need ranges assigned,
-	# and how much room is left
-	count = 0
-	unused  = 127
-	for (lname, lvel, lrange, latten, llevel) in layers:
-	    if lrange == -1:
-	        count += 1
-	    else:
-	        unused -= lrange
+        # Find how many layers need ranges assigned,
+        # and how much room is left
+        count = 0
+        unused  = 127
+        for (lname, lvel, lrange, latten, llevel) in layers:
+            if lrange == -1:
+                count += 1
+            else:
+                unused -= lrange
 
-	if unused < 0:
-	    print >>sys.stderr, "Total of velocity ranges must not exceed 127"
-	    sys.exit(1)
+        if unused < 0:
+            print >>sys.stderr, "Total of velocity ranges must not exceed 127"
+            sys.exit(1)
 
-	# allocate unused velocity range to layers without vel-range specs
-	ix = 0
-	for (lname, lvel, lrange, latten, llevel) in layers:
-	    if lrange == -1:
-	        lrange = unused / count
-		count -= 1
-		unused -= lrange
-		layers[ix] = (lname, lvel, lrange, latten, llevel)
-	    ix += 1
+        # allocate unused velocity range to layers without vel-range specs
+        ix = 0
+        for (lname, lvel, lrange, latten, llevel) in layers:
+            if lrange == -1:
+                lrange = unused / count
+                count -= 1
+                unused -= lrange
+                layers[ix] = (lname, lvel, lrange, latten, llevel)
+            ix += 1
 
-	# assign specific max velocities to each
-	ix = 0
-	last_lvel = 0
-	for (lname, lvel, lrange, latten, llevel) in layers:
-	    last_lvel += lrange
-	    layers[ix] = (lname, last_lvel, lrange, latten, llevel)
-	    print >>sys.stderr, (
-	        "Layer %*s: velocity %3d, range %3d, level %3d"
-		% (gl.lnamelen, lname, last_lvel, lrange, llevel))
-	    ix += 1
+        # assign specific max velocities to each
+        ix = 0
+        last_lvel = 0
+        for (lname, lvel, lrange, latten, llevel) in layers:
+            last_lvel += lrange
+            layers[ix] = (lname, last_lvel, lrange, latten, llevel)
+            print >>sys.stderr, (
+                "Layer %*s: velocity %3d, range %3d, level %3d"
+                % (gl.lnamelen, lname, last_lvel, lrange, llevel))
+            ix += 1
 
     #}
 
     # build LAYER array
     for (lname, lvel, lrange, latten, llevel) in layers:
-	LAYER.append([lname, lvel, latten, llevel, 0, 0, 0, 0])
+        LAYER.append([lname, lvel, latten, llevel, 0, 0, 0, 0])
 
 #}
 
@@ -1080,7 +1080,7 @@ if __name__ == "__main__":
 
     if len(args) < 2:
         usage(prog)
-	sys.exit(1)
+        sys.exit(1)
 
     sfname = args[0]
     del args[0]
@@ -1090,11 +1090,11 @@ if __name__ == "__main__":
     zfname = sfname + ".sfz"
 
     try:
-	gl.ofile = file(ofname, "w")
-	gl.sfzf  = file(zfname, "w")
+        gl.ofile = file(ofname, "w")
+        gl.sfzf  = file(zfname, "w")
     except Exception, msg:
-	print >>sys.stderr, msg
-	sys.exit(1)
+        print >>sys.stderr, msg
+        sys.exit(1)
 
     print >>sys.stderr, "Input (control) file:", cfname
     print >>sys.stderr, "Output (keymap) file:", ofname

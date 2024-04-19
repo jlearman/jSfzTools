@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 #
 # LIcense: CC0
 #
@@ -60,7 +60,7 @@ def put_uint32(ofile, val):
     ofile.write(bytes)
 
 def get_uint24(file):
-    bytes = file.read(3)        
+    bytes = file.read(3)
     return (((
         ord(bytes[2]) << 8)
         + ord(bytes[1]) << 8)
@@ -101,7 +101,7 @@ class Chunk:
         for ix in range(0, self.level):
             str += " "
         return str
-   
+
     def iseek(self):
         self.riff.inf.seek(self.inf_loc)
 
@@ -170,7 +170,7 @@ class Chunk:
                 print ("    play_count   = 0x%x" % play_count)
                 ix += 1
                 len += 6 * 4
-                
+
             while False and len <= self.len:
                 stuff = self.riff.inf.read(4)
                 print ("    data         = 0x%x" % data)
@@ -213,7 +213,7 @@ class Chunk:
 
     def skip(self):
         self.riff.inf.seek(self.inf_loc + self.len)
-        
+
     def walk(self, func, arg=None):
         func(self, arg)
         for chunk in self.subchunks:
