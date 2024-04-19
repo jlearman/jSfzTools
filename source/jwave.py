@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 # Handle Microsoft RIFF chunks, as in wave files.
 
 import math
@@ -121,8 +121,8 @@ class Chunk:
         self.type = self.inf.read(4)
 
     def writeHeader(self):
-	# print "writing header:", self.type
-	self.outf.write(self.type)
+    # print "writing header:", self.type
+    self.outf.write(self.type)
 
     def printHeader(self):
         print self.type,
@@ -138,7 +138,7 @@ class RiffChunk(Chunk):
         
     def writeHeader(self):
         Chunk.writeHeader(self)
-	# print "writing size: 0x%08x" % self.size
+    # print "writing size: 0x%08x" % self.size
         put_uint32(self.outf, self.size)
         
     def printHeader(self):
@@ -149,21 +149,21 @@ class RiffChunk(Chunk):
 class WaveChunk(Chunk):
     def __init__(self, riff=None, inf=None, outf=None):
         Chunk.__init__(self, inf, outf)
-	self.riff = riff
+    self.riff = riff
         
     def readHeader(self):
-	if self.riff == None:
-	    self.riff = RiffChunk(self.inf)
-	    self.riff.readHeader()
+    if self.riff == None:
+        self.riff = RiffChunk(self.inf)
+        self.riff.readHeader()
         Chunk.readHeader(self)
-	while True:
-	    fmt = RiffChunk(self.inf)
-	    fmt.readHeader()
-	    if fmt.type == "fmt ":
-	        break
-	    print "Skipping unexpected WAVE file chunk:",
-	    fmt.printHeader()
-	    self.inf.seek(fmt.size, 1)		# skip this chunk!
+    while True:
+        fmt = RiffChunk(self.inf)
+        fmt.readHeader()
+        if fmt.type == "fmt ":
+            break
+        print "Skipping unexpected WAVE file chunk:",
+        fmt.printHeader()
+        self.inf.seek(fmt.size, 1)		# skip this chunk!
         if fmt.type != "fmt ":
             print "%%%%error: fmt chunk wasn't first, found 0x%x" % fmt.type
             sys.exit(1)
@@ -182,30 +182,30 @@ class WaveChunk(Chunk):
            
         self.fmt = fmt
         bytesPerVal = (fmt.bitsPerSample + 7) / 8
-	self.bytesPerVal = bytesPerVal
-	if (bytesPerVal * fmt.numChan != fmt.blockAlign):
-	    print ("Unsupported format: bytesPerVal = %d, blockAlign = %d, numChan = %d" %
-		(bytesPerVal, fmt.blockAlign, fmt.numChan))
-	    sys.exit(1)
+    self.bytesPerVal = bytesPerVal
+    if (bytesPerVal * fmt.numChan != fmt.blockAlign):
+        print ("Unsupported format: bytesPerVal = %d, blockAlign = %d, numChan = %d" %
+        (bytesPerVal, fmt.blockAlign, fmt.numChan))
+        sys.exit(1)
         if bytesPerVal == 2:
-	    self.setup16()
+        self.setup16()
         elif bytesPerVal == 3:
-	    self.setup24()
+        self.setup24()
         else:
             print "Warning: Unsupported format"
             
-	while True:
-	    data = RiffChunk(self.inf)
-	    data.readHeader()
-	    if data.type == "data":
-	        break
-	    print "Skipping unexpected WAVE file chunk:",
-	    data.printHeader()
-	    self.inf.seek(data.size, 1)		# skip this chunk!
-	    # %%% should save skipped (unrecognized) chunks
-	else:
-	    print "No wave data chunk found!"
-	    sys.exit(1)
+    while True:
+        data = RiffChunk(self.inf)
+        data.readHeader()
+        if data.type == "data":
+            break
+        print "Skipping unexpected WAVE file chunk:",
+        data.printHeader()
+        self.inf.seek(data.size, 1)		# skip this chunk!
+        # %%% should save skipped (unrecognized) chunks
+    else:
+        print "No wave data chunk found!"
+        sys.exit(1)
 
         self.data = data
 
@@ -215,12 +215,12 @@ class WaveChunk(Chunk):
         self.start = 28 + fmt.size
 
     def writeHeader(self, nsamples=0):
-	fmt = self.fmt
-	self.riff.size = 28 + fmt.size + nsamples * fmt.blockAlign
+    fmt = self.fmt
+    self.riff.size = 28 + fmt.size + nsamples * fmt.blockAlign
 
-	self.riff.writeHeader()
+    self.riff.writeHeader()
         Chunk.writeHeader(self)
-    	fmt.writeHeader()
+        fmt.writeHeader()
         put_uint16(self.outf, fmt.compCode)
         put_uint16(self.outf, fmt.numChan)
         put_uint32(self.outf, fmt.sampleRate)
@@ -232,8 +232,8 @@ class WaveChunk(Chunk):
             fmt.extraFmtBytes = self.outf.write(fmt.extraFmtBytes)
            
         data = RiffChunk(outf=self.outf)
-	data.type = "data"
-	data.size = fmt.blockAlign * nsamples
+    data.type = "data"
+    data.size = fmt.blockAlign * nsamples
         data.writeHeader()
         self.start = 28 + fmt.size
 
@@ -241,32 +241,32 @@ class WaveChunk(Chunk):
     # Assume seek has already happened on self
     def copySamples(self, iwave, start_sn, end_sn):
         if (iwave.fmt.blockAlign != self.fmt.blockAlign
-	    or iwave.fmt.numChan != iwave.fmt.numChan
-	    or iwave.fmt.bitsPerSample != self.fmt.bitsPerSample):
-	    print "copySamples: wave formats must match"
-	iwave.seekSample(start_sn)
-	sampcount = end_sn + 1 - start_sn
+        or iwave.fmt.numChan != iwave.fmt.numChan
+        or iwave.fmt.bitsPerSample != self.fmt.bitsPerSample):
+        print "copySamples: wave formats must match"
+    iwave.seekSample(start_sn)
+    sampcount = end_sn + 1 - start_sn
 
-	# test #####
-	if False:
-	    for ix in range(0,sampcount):
-		samp = iwave.readSample()
-		self.writeSample(samp)
-	    return
+    # test #####
+    if False:
+        for ix in range(0,sampcount):
+        samp = iwave.readSample()
+        self.writeSample(samp)
+        return
 
-	# fast way
-	bytecount = sampcount * self.fmt.blockAlign
-	blksize = 4096
-	while bytecount > blksize:
-	    self.outf.write(iwave.inf.read(blksize))
-	    bytecount -= blksize
-	self.outf.write(iwave.inf.read(bytecount))
+    # fast way
+    bytecount = sampcount * self.fmt.blockAlign
+    blksize = 4096
+    while bytecount > blksize:
+        self.outf.write(iwave.inf.read(blksize))
+        bytecount -= blksize
+    self.outf.write(iwave.inf.read(bytecount))
 
 
     def copyHeader(self, src):
-	self.riff	= src.riff
-	self.riff.inf	= self.inf
-	self.riff.outf	= self.outf
+    self.riff	= src.riff
+    self.riff.inf	= self.inf
+    self.riff.outf	= self.outf
         self.type	= src.type
 
         fmt = RiffChunk(self.inf, self.outf)
@@ -287,26 +287,26 @@ class WaveChunk(Chunk):
             fmt.extraFmtBytes = src.fmt.extraFmtBytes
 
         self.fmt    = fmt
-	self.getval = src.getval
-	self.putval = src.putval
-	self.dB2v   = src.dB2v
-	self.v2dB   = src.v2dB
+    self.getval = src.getval
+    self.putval = src.putval
+    self.dB2v   = src.dB2v
+    self.v2dB   = src.v2dB
 
         data = RiffChunk(self.inf, self.outf)
         self.data = []
         self.start = 28 + fmt.size
 
     def setup16(self):
-	self.getval = get_sint16
-	self.putval = put_sint16
-	self.dB2v   = dB2v16
-	self.v2dB   = v2dB16
+    self.getval = get_sint16
+    self.putval = put_sint16
+    self.dB2v   = dB2v16
+    self.v2dB   = v2dB16
 
     def setup24(self):
-	self.getval = get_sint24
-	self.putval = put_sint24
-	self.dB2v   = dB2v24
-	self.v2dB   = v2dB24
+    self.getval = get_sint24
+    self.putval = put_sint24
+    self.dB2v   = dB2v24
+    self.v2dB   = v2dB24
 
     def printHeader(self):
         RiffChunk.printHeader(self.riff)
@@ -326,7 +326,7 @@ class WaveChunk(Chunk):
 
         print "    (samples)     =", self.numSamples
         print "    (duration)    =", jtime.hmsm(
-	    self.numSamples, self.fmt.sampleRate)
+        self.numSamples, self.fmt.sampleRate)
 
 
     def seekSample(self, n):
@@ -352,22 +352,22 @@ class WaveChunk(Chunk):
             self.putval(self.outf, samp[ix])
 
     def readChan(self, chan, start, end):
-	samps = []
-	skip_bytes = (self.fmt.numChan - 1) * self.bytesPerVal
+    samps = []
+    skip_bytes = (self.fmt.numChan - 1) * self.bytesPerVal
         loc = self.start + (start * self.fmt.blockAlign) + chan
         self.inf.seek(loc)
-	# print "self.start =", self.start
-	# print "loc =", loc
-	# print "start, end", start, end
-	if skip_bytes:
-	    for sampn in range(start, end):
-		samps.append(self.getval(self.inf))
-		self.inf.read(skip_bytes)
-	else:
-	    for sampn in range(start, end):
-		samps.append(self.getval(self.inf))
+    # print "self.start =", self.start
+    # print "loc =", loc
+    # print "start, end", start, end
+    if skip_bytes:
+        for sampn in range(start, end):
+        samps.append(self.getval(self.inf))
+        self.inf.read(skip_bytes)
+    else:
+        for sampn in range(start, end):
+        samps.append(self.getval(self.inf))
 
-	return samps
+    return samps
 
     # sample generator -- not used
     def samples(self):
@@ -386,12 +386,12 @@ class WaveChunk(Chunk):
 
 class Rmsbuf:
     def __init__(self, wave, maxlen=0):
-	if maxlen == 0:
-	    maxlen = wave.fmt.sampleRate
+    if maxlen == 0:
+        maxlen = wave.fmt.sampleRate
         self.maxlen = maxlen
         self.calcInterval = wave.fmt.sampleRate / 10	# %%% should be 5
-	self.v2dB = wave.v2dB
-	self.dB2v = wave.dB2v
+    self.v2dB = wave.v2dB
+    self.dB2v = wave.dB2v
 
         self.data = []
         self.len = 0
@@ -401,12 +401,12 @@ class Rmsbuf:
         self.minrms = 0x7fffffff
         self.sumvsquared = 0L
         self.t  = 0
-	self.full = False
+    self.full = False
 
     def add_notfull(self, val):
         self.data.append(val)
 
-	###
+    ###
         # keep these lines same as below
         self.t += 1
         absval = abs(val)
@@ -414,12 +414,12 @@ class Rmsbuf:
         if absval > self.maxval:
             self.maxvt  = self.t
             self.maxval = absval
-	###
+    ###
 
         self.len += 1
         if self.len == self.maxlen:
             self.add = Rmsbuf.add_full
-	    self.full = True
+        self.full = True
         self.index = self.maxlen - 1
         
     def add_full(self, val):
@@ -427,7 +427,7 @@ class Rmsbuf:
         absold = abs(self.data[self.index]) + 0L
         self.sumvsquared -= absold * absold
         
-	###
+    ###
         # keep these lines same as above
         self.t += 1
         absval = abs(val)
@@ -441,51 +441,51 @@ class Rmsbuf:
         if self.t % self.calcInterval == 0:
             rms = math.sqrt(self.sumvsquared / self.maxlen)
             # print "%s: %-7.3f" % (jtime.hms(self.t, self.maxlen), self.v2dB(rms))
-	    if rms > self.maxrms:
-		self.maxrmst = self.t
-		self.maxrms = rms
-	    if rms < self.minrms:
-		self.minrmst = self.t
-		self.minrms = rms
+        if rms > self.maxrms:
+        self.maxrmst = self.t
+        self.maxrms = rms
+        if rms < self.minrms:
+        self.minrmst = self.t
+        self.minrms = rms
 
     def getRms(self):
-	if self.sumvsquared < self.len * 2:
-	    return self.v2dB(2)
-	return self.v2dB(math.sqrt(self.sumvsquared / self.len))
+    if self.sumvsquared < self.len * 2:
+        return self.v2dB(2)
+    return self.v2dB(math.sqrt(self.sumvsquared / self.len))
 
     def getPeak(self):
-	return self.v2dB(self.maxval)
+    return self.v2dB(self.maxval)
 
     def findPrevCrossing(self):
 
-	t_offset = self.t - 1 - self.index
-	ix = self.index
+    t_offset = self.t - 1 - self.index
+    ix = self.index
 
-	samp = self.data[ix]
-	last_pos = samp >= 0
-	if samp == 0:
-	    return self.t
-	while ix >= 0:
-	    samp = self.data[ix]
-	    pos = samp >= 0
-	    if last_pos != pos:
-	        return ix + t_offset
-	    ix -= 1
+    samp = self.data[ix]
+    last_pos = samp >= 0
+    if samp == 0:
+        return self.t
+    while ix >= 0:
+        samp = self.data[ix]
+        pos = samp >= 0
+        if last_pos != pos:
+            return ix + t_offset
+        ix -= 1
 
-	if not self.full:
-	    return self.t
+    if not self.full:
+        return self.t
 
-	t_offset -= self.len
-	ix = self.len - 1
+    t_offset -= self.len
+    ix = self.len - 1
 
-	while ix > self.index:
-	    samp = self.data[ix]
-	    pos = samp >= 0
-	    if last_pos != pos:
-	        return ix + t_offset
-	    ix -= 1
+    while ix > self.index:
+        samp = self.data[ix]
+        pos = samp >= 0
+        if last_pos != pos:
+            return ix + t_offset
+        ix -= 1
 
-	return self.t
+    return self.t
 
 
 def dbTest(wave):
@@ -493,7 +493,7 @@ def dbTest(wave):
     for val in (0.0, -6.02, -12.04, -18.06, -48.16, -50.0, -90.31):
         print ("%9.5f 0x%08x %9.2f"
                % (val,
-	          wave.dB2v(val),
+              wave.dB2v(val),
                   wave.v2dB(wave.dB2v(val))
                   )
                )
@@ -510,19 +510,19 @@ def dbTest2(wave):
 def riffdump(args):
     if len(args) < 2:
         print "usage: %s <infile> <formatfile> -- dumps RIFF file" % args[0]
-	print
-	print "  <formatfile> contains a list of RIFF chunk names of"
-	print "  chunks containing subchunks."
-	sys.exit(1)
+    print
+    print "  <formatfile> contains a list of RIFF chunk names of"
+    print "  chunks containing subchunks."
+    sys.exit(1)
 
     infname = args[1]
     del args[1]
 
     try:
-	inf  = file(infname, "rb")
+    inf  = file(infname, "rb")
     except IOError, msg:
         print msg
-	sys.exit(1)
+    sys.exit(1)
 
     riff = RiffChunk(inf)
     riff.readHeader()
@@ -534,10 +534,10 @@ def wavedump(args):
     del args[1]
 
     try:
-	inf  = file(infname, "rb")
+    inf  = file(infname, "rb")
     except IOError, msg:
         print msg
-	sys.exit(1)
+    sys.exit(1)
 
     # riff = RiffChunk(inf)
     # riff.readHeader()

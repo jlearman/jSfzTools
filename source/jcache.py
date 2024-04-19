@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 # disk cacher
 #
 # Keeps "archive" folder trees identical to "active" ones.
@@ -47,15 +47,15 @@ def ynaq(question, dflt="y", aprompt=None, echo=False):
         if answer == "\r":
             answer = dflt
         if answer == "y":
-	    rc = YES
+        rc = YES
         elif answer == "n":
-	    rc = NO
+        rc = NO
         elif answer == "a":
-	    rc = A
+        rc = A
         elif answer == "q":
-	    if echo:
-		msvcrt.putch(answer)
-		print
+        if echo:
+        msvcrt.putch(answer)
+        print
             raise Quit("user quit")
         else:
             msvcrt.putch(answer)
@@ -63,8 +63,8 @@ def ynaq(question, dflt="y", aprompt=None, echo=False):
             print
 
     if echo:
-	msvcrt.putch(answer)
-	print
+    msvcrt.putch(answer)
+    print
     
     return rc
 
@@ -76,17 +76,17 @@ def yn(question, dflt="y", echo=False):
         if answer == "\r":
             answer = dflt
         if answer == "y":
-	    rc = True
+        rc = True
         elif answer == "n":
-	    rc = False
+        rc = False
         else:
             msvcrt.putch(answer)
             answer = None
             print
 
     if echo:
-	msvcrt.putch(answer)
-	print
+    msvcrt.putch(answer)
+    print
 
     return rc
     
@@ -106,7 +106,7 @@ def chr_combine(ins, ch):
 def skippedDestDir(dstdir):
     for dir in SkippedDirs:
         if dstdir.startswith(dir):
-	    return True
+        return True
     return False
 
 def addSkippedDestDir(dstdir):
@@ -129,30 +129,30 @@ def backup(srcroot, dstroot, srcdir, dirs, srcfiles):
 
     if (not os.path.exists(dstdir)):
 
-	if skippedDestDir(dstdir):
-	    print "  SKIPPED:", dstdir
-	    return
+    if skippedDestDir(dstdir):
+        print "  SKIPPED:", dstdir
+        return
 
-	print "  NEW DIR:", dstdir,
+    print "  NEW DIR:", dstdir,
         try:
             if Copymode == NO:
                 print "(no)"
-		addSkippedDestDir(dstdir)
+        addSkippedDestDir(dstdir)
                 return
             if Copymode == A:
                 ans = ynaq("", "y")
                 if ans == NO:
                     print "no"
-		    addSkippedDestDir(dstdir)
+            addSkippedDestDir(dstdir)
                     return
                 if ans == A:
                     Copymode = YES
 
             os.mkdir(dstdir)
-	    print "(ok)"
+        print "(ok)"
             check_for_deletes = False
         except IOError:
-	    print "(err)"
+        print "(err)"
             print >>sys.stderr, "Can't create dir: %s:", IOError
             return(False)
     
@@ -161,7 +161,7 @@ def backup(srcroot, dstroot, srcdir, dirs, srcfiles):
         srcfname = srcdir + "/" + fname
         dstfname = dstdir + "/" + fname
         copy = False
-	srcstat = os.stat(srcfname)
+    srcstat = os.stat(srcfname)
         try:
             dststat = os.stat(dstfname)
         except OSError:
@@ -186,12 +186,12 @@ def backup(srcroot, dstroot, srcdir, dirs, srcfiles):
                 shutil.copy(srcfname, dstfname)
             except IOError, msg:
                 print >>sys.stderr, "Error:", msg
-	    else:
-		try:
-		    os.utime(dstfname, (srcstat[stat.ST_ATIME], srcstat[stat.ST_MTIME]))
-		except OSError, msg:
-		    print >>sys.stderr, "\n  Warning: can't set time: ", msg
-		print " (ok)"
+        else:
+        try:
+            os.utime(dstfname, (srcstat[stat.ST_ATIME], srcstat[stat.ST_MTIME]))
+        except OSError, msg:
+            print >>sys.stderr, "\n  Warning: can't set time: ", msg
+        print " (ok)"
 
     # delete any files on dst that aren't on src
     ii = 0
@@ -256,34 +256,34 @@ def copydel():
 
         line = jtrans.tr(line, "\t", " ")
         # line = chr_combine(line, " ")
-	try:
-	    (act, arch) = line.split("|")
-	except ValueError, err:
-	    print "Invalid config line: no '|' or too many:"
-	    print line
-	    if not yn("Continue", "n"):
-	        raise Quit("User Quit")
+    try:
+        (act, arch) = line.split("|")
+    except ValueError, err:
+        print "Invalid config line: no '|' or too many:"
+        print line
+        if not yn("Continue", "n"):
+            raise Quit("User Quit")
 
-	act  = act.strip()
-	arch = arch.strip()
-	if Backup:
-	    dest = arch
-	    src  = act
-	else:
-	    dest = act
-	    src  = arch
+    act  = act.strip()
+    arch = arch.strip()
+    if Backup:
+        dest = arch
+        src  = act
+    else:
+        dest = act
+        src  = arch
 
         print "%s --> %s" % (src, dest)
 
-	found_files = False
-	for (root, dirs, files) in os.walk(src):
-	    found_files = True
-	    if (backup(src, dest, root, dirs, files)):
-		return
-	if not found_files:
-	    print >>sys.stderr, "Can't open source dir '%s'" % act
-	    if not yn("Continue with subsequent lines", "n"):
-		raise Quit("User Quit")
+    found_files = False
+    for (root, dirs, files) in os.walk(src):
+        found_files = True
+        if (backup(src, dest, root, dirs, files)):
+        return
+    if not found_files:
+        print >>sys.stderr, "Can't open source dir '%s'" % act
+        if not yn("Continue with subsequent lines", "n"):
+        raise Quit("User Quit")
 
 
 def get_parms():
@@ -314,7 +314,7 @@ def main():
     done = False
     while not done:
 
-	init()
+    init()
         try:
             get_parms()
             print

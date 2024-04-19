@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 #
 # Read & dump RIFF file.
 # Make guesses about chunks
@@ -82,20 +82,20 @@ def roundup(ln):
 
 class Chunk:
     def __init__(self, riffFile, parent):
-	self.parent = parent
-	self.riff   = riffFile
-	self.subchunks = []
+    self.parent = parent
+    self.riff   = riffFile
+    self.subchunks = []
 
-	if parent == None:
-	    self.level = 0
-	else:
-	    self.level = parent.level + 1
+    if parent == None:
+        self.level = 0
+    else:
+        self.level = parent.level + 1
 
     def ind(self):
         str = ""
-	for ix in range(0, self.level):
-	    str += " "
-	return str
+    for ix in range(0, self.level):
+        str += " "
+    return str
    
     def iseek(self):
         self.riff.inf.seek(self.inf_loc)
@@ -106,11 +106,11 @@ class Chunk:
     def read(self, extract=None):
         self.format	= self.riff.inf.read(4)
         self.len	= get_uint32(self.riff.inf)
-	self.inf_loc	= self.riff.inf.tell()	# location of value
+    self.inf_loc	= self.riff.inf.tell()	# location of value
 
-	if dbg:
-	    print "[d] 0x%08x: %s %s" %(self.inf_loc - 8, self.ind(), self.format),
-	    print "len: 0x%08x" % self.len,
+    if dbg:
+        print "[d] 0x%08x: %s %s" %(self.inf_loc - 8, self.ind(), self.format),
+        print "len: 0x%08x" % self.len,
             if extract:
                 print "Extract:", extract,       # %%%
 
@@ -170,74 +170,74 @@ class Chunk:
                 stuff = self.riff.inf.read(4)
                 print ("    data         = 0x%x" % data)
 
-	if self.format not in majors:
-	    if dbg:
-		print "loc: 0x%08x" % self.inf_loc
-	    self.riff.inf.seek(self.inf_loc + roundup(self.len), 0)
-	    return 8 + roundup(self.len)
+    if self.format not in majors:
+        if dbg:
+        print "loc: 0x%08x" % self.inf_loc
+        self.riff.inf.seek(self.inf_loc + roundup(self.len), 0)
+        return 8 + roundup(self.len)
 
-	self.type = self.riff.inf.read(4)
-	self.inf_loc += 4
-	if dbg:
-	    print "type:", self.type,
-	    print "loc: 0x%08x" % self.inf_loc
+    self.type = self.riff.inf.read(4)
+    self.inf_loc += 4
+    if dbg:
+        print "type:", self.type,
+        print "loc: 0x%08x" % self.inf_loc
 
-	ln = 4
-	while ln < self.len - 1:
-	    chunk = Chunk(self.riff, self)
-	    chunklen = chunk.read(extract)
-	    if ln + chunklen > self.len:
-	        print "Error: last chunk exceeded parent's len"
-		sys.exit(1)
-	    self.subchunks.append(chunk)
-	    ln += chunklen
-	    # print self.ind(), "-- %s at 0x%08x, ln = 0x%08x" % (self.format, self.inf_loc + ln, ln)
+    ln = 4
+    while ln < self.len - 1:
+        chunk = Chunk(self.riff, self)
+        chunklen = chunk.read(extract)
+        if ln + chunklen > self.len:
+            print "Error: last chunk exceeded parent's len"
+        sys.exit(1)
+        self.subchunks.append(chunk)
+        ln += chunklen
+        # print self.ind(), "-- %s at 0x%08x, ln = 0x%08x" % (self.format, self.inf_loc + ln, ln)
 
-	if self.len != roundup(ln):
-	    print "Error: insufficient data"
+    if self.len != roundup(ln):
+        print "Error: insufficient data"
 
-	return roundup(self.len + 8)
+    return roundup(self.len + 8)
 
     def printHdr(self):
-	print "0x%08x: %s %s" %(self.inf_loc - 8, self.ind(), self.format),
-	print "len: 0x%08x" % self.len,
-	if "type" in dir(self):
-	    print "type:", self.type
-	else:
-	    print
+    print "0x%08x: %s %s" %(self.inf_loc - 8, self.ind(), self.format),
+    print "len: 0x%08x" % self.len,
+    if "type" in dir(self):
+        print "type:", self.type
+    else:
+        print
 
     def skip(self):
         self.riff.inf.seek(self.inf_loc + self.len)
-	
+    
     def walk(self, func, arg=None):
         func(self, arg)
-	for chunk in self.subchunks:
-	    chunk.walk(func, arg)
+    for chunk in self.subchunks:
+        chunk.walk(func, arg)
 
     def prn(self, text):
-	print "%11s %s %s" % ("", self.ind(), text)
+    print "%11s %s %s" % ("", self.ind(), text)
 
     def prnLoc(self, text):
-	print "0x%08x %s %s" % (self.inf_loc, self.ind(), text)
+    print "0x%08x %s %s" % (self.inf_loc, self.ind(), text)
 
 class RiffFile:
 
     def __init__(self, inf=None, outf=None):
         self.inf	= inf
-	self.inf_ix	= 0
-	self.outf	= outf
-	self.outf_ix	= 0
-	self.vsize	= None
+    self.inf_ix	= 0
+    self.outf	= outf
+    self.outf_ix	= 0
+    self.vsize	= None
 
     def read(self, extract=None):
         if not self.inf:
-	    return
-	self.chunk = Chunk(self, None)
-	self.chunk.read(extract)
+        return
+    self.chunk = Chunk(self, None)
+    self.chunk.read(extract)
 
     def walk(self, func, arg=None):
         if "chunk" in dir(self):
-	    self.chunk.walk(func, arg)
+        self.chunk.walk(func, arg)
 
 
 def main(args):
@@ -247,8 +247,8 @@ def main(args):
 
     if len(args) < 2:
         print "usage: %s <infile> -- dumps RIFF file"
-	print
-	sys.exit(1)
+    print
+    sys.exit(1)
 
     while len(args) > 1 and args[1].startswith("-"):
         option = args[1]
@@ -262,10 +262,10 @@ def main(args):
     del args[1]
 
     try:
-	inf  = file(infname, "rb")
+    inf  = file(infname, "rb")
     except IOError, msg:
         print msg
-	sys.exit(1)
+    sys.exit(1)
 
     riff = RiffFile(inf)
     riff.read(extract)

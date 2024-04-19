@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 
 # Trim a sample wave file to remove latency (relative silence before first transient).
 # Suitable for sampled instruments like piano which have a percussive start.
@@ -49,19 +49,19 @@ def find_peak(wave):
     peak_samp_num = 0
     wave.seekSample(samp_num)
     while True:
-	try:
-	    samp = wave.readSample()
-	except IndexError:
-	    return wave.v2dB(peak)
+    try:
+        samp = wave.readSample()
+    except IndexError:
+        return wave.v2dB(peak)
         cur = abs(samp[0])
-	if cur > peak:
-	    peak = cur
+    if cur > peak:
+        peak = cur
             peak_samp_num = samp_num
 
         # if we haven't hit a new peak in a second or more, we're done
         # TODO: make this configurable in seconds
         if samp_num > peak_samp_num + 48000:
-	    return wave.v2dB(peak)
+        return wave.v2dB(peak)
 
 
 # Find the start, old way (use this for now!)
@@ -70,13 +70,13 @@ def find_trigger(wave, trig_dB):
     samp_num = 0
     wave.seekSample(samp_num)
     while True:
-	try:
-	    samp = wave.readSample()
-	except IndexError:
-	    return 0
-	if abs(samp[0]) > trigger:
-	    break;
-	samp_num += 1
+    try:
+        samp = wave.readSample()
+    except IndexError:
+        return 0
+    if abs(samp[0]) > trigger:
+        break;
+    samp_num += 1
 
     # we've found a trigger.
     return samp_num
@@ -93,8 +93,8 @@ def measure_rms(wave, start_sn, duration):
     buf = jwave.Rmsbuf(wave)
 
     for samp_num in range(start_sn, start_sn + duration):
-	samp = wave.readSample()
-	buf.add(buf, samp[0])
+    samp = wave.readSample()
+    buf.add(buf, samp[0])
 
     return buf.getRms()
 
@@ -105,18 +105,18 @@ def measure_rms(wave, start_sn, duration):
 def find_nth_zero(wave, start_sn, end_sn, slope=1, count=_lead_crossings):
 
     if start_sn < end_sn:
-	first_sn = start_sn
-	last_sn = end_sn + 1
-	start_ix = 0
-	stop_ix = last_sn - first_sn
-	incr = 1
+    first_sn = start_sn
+    last_sn = end_sn + 1
+    start_ix = 0
+    stop_ix = last_sn - first_sn
+    incr = 1
     else:
-	first_sn = end_sn
-	last_sn = start_sn + 1
-	start_ix = last_sn - first_sn - 1
-	stop_ix = 0
-	slope = -slope
-	incr = -1
+    first_sn = end_sn
+    last_sn = start_sn + 1
+    start_ix = last_sn - first_sn - 1
+    stop_ix = 0
+    slope = -slope
+    incr = -1
 
     # read samples into buffer
     samps = []
@@ -127,23 +127,23 @@ def find_nth_zero(wave, start_sn, end_sn, slope=1, count=_lead_crossings):
     last = samps[start_ix]
     best = 0
     for ix in range(start_ix + incr, stop_ix, incr):
-	this = samps[ix]
-	# print first_sn + ix, this	##################################
-	if last * slope < 0 and this * slope >= 0:
-	    # print first_sn + ix, last, this, slope
-	    count -= 1
-	    best = first_sn + ix
-	    if count == 0:
-		return(first_sn + ix)
-	last = this
+    this = samps[ix]
+    # print first_sn + ix, this	##################################
+    if last * slope < 0 and this * slope >= 0:
+        # print first_sn + ix, last, this, slope
+        count -= 1
+        best = first_sn + ix
+        if count == 0:
+        return(first_sn + ix)
+    last = this
 
     if best != 0:
         return best
 
     if True:
-	print "  start_sn ", start_sn
-	print "  end_sn   ", end_sn
-	print "  slope    ", slope
+    print "  start_sn ", start_sn
+    print "  end_sn   ", end_sn
+    print "  slope    ", slope
     raise Exception("No zero crossing found with required slope")
 
 
@@ -364,7 +364,7 @@ def main(prog, args):
 
     if len(args) < 1:
         usage(prog)
-	return 1
+    return 1
 
     t1 = jtime.start()
     file_count = 0
@@ -375,27 +375,27 @@ def main(prog, args):
 
     while len(args) > 0:
 
-	if len(args) > 2 and args[0] == "-f":
-	    _folder = args[1] + "/"
-	    print "Output folder:", args[1]
-	    del args[0]
-	    del args[0]
+    if len(args) > 2 and args[0] == "-f":
+        _folder = args[1] + "/"
+        print "Output folder:", args[1]
+        del args[0]
+        del args[0]
 
-	if len(args) < 1:
-	    return rCode
+    if len(args) < 1:
+        return rCode
 
-	fspec = args[0]
-	del args[0]
+    fspec = args[0]
+    del args[0]
 
 
-	for ifname in glob.glob(fspec):
+    for ifname in glob.glob(fspec):
 
-	    file_count += 1
-	    basename = jtrans.tr(ifname, "\\", "/")
-	    basename = basename.split("/")[-1]		# strip path
+        file_count += 1
+        basename = jtrans.tr(ifname, "\\", "/")
+        basename = basename.split("/")[-1]		# strip path
             ofname = _folder + "/" + basename
-	    print "\nProcessing", ifname, "to", ofname, "==================================="
-	    print
+        print "\nProcessing", ifname, "to", ofname, "==================================="
+        print
             try:
                 inf  = file(ifname, "rb")
             except IOError, msg:
@@ -406,28 +406,28 @@ def main(prog, args):
             except IOError, msg:
                 raise IOError(msg)
 
-	    t2 = jtime.start()
-	    try:
-		if prof:
-		    rCode = profile.run("process_sample(inf, outf)")
-		else:
-		    msecs_trimmed = process_sample(inf, outf)
-	    except IOError, msg:
-		print msg
-		if len(args) > 0:
-		    print "Skipping ..."
-		    continue
+        t2 = jtime.start()
+        try:
+        if prof:
+            rCode = profile.run("process_sample(inf, outf)")
+        else:
+            msecs_trimmed = process_sample(inf, outf)
+        except IOError, msg:
+        print msg
+        if len(args) > 0:
+            print "Skipping ..."
+            continue
 
             max_msecs_trimmed = max(msecs_trimmed, max_msecs_trimmed)
             tot_msecs_trimmed += msecs_trimmed
             tot_files_trimmed += 1
 
-	    print
-	    print "Elapsed time for %s: " % ifname, jtime.hms(jtime.end(t2), 1)
+        print
+        print "Elapsed time for %s: " % ifname, jtime.hms(jtime.end(t2), 1)
 
     if file_count > 1:
-	print
-	print "Elapsed time for all files:", jtime.hms(jtime.end(t1), 1)
+    print
+    print "Elapsed time for all files:", jtime.hms(jtime.end(t1), 1)
         print "Average of %3d msec trimmed" % (tot_msecs_trimmed/tot_files_trimmed)
         print "Max     of %3d msec trimmed" % max_msecs_trimmed
 
