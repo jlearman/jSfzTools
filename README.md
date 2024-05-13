@@ -1,7 +1,8 @@
 # jSfzTools - python tools to create sfz samplesets
 
+# NOTE: big update coming soon -- update from Python2 to Python3, installation instructions, better documentation
+
 Jeff's SFZ tools
-Copyright 2006, Jeff Learman
 
 No warranties.  Programs are likely to be fragile, especially
 when taken outside the narrow range of test scenarios I've used!
