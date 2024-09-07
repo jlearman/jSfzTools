@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python3
 # disk cacher
 #
 # Keeps "archive" folder trees identical to "active" ones.
@@ -42,7 +42,7 @@ def ynaq(question, dflt="y", aprompt=None, echo=False):
 
     answer = None
     while answer == None:
-        print question, "(y,n,a%s,q) [%s]? " % (aprompt, dflt),
+        print(question, "(y,n,a%s,q) [%s]? " % (aprompt, dflt), end="")
         answer = string.lower(msvcrt.getch())
         if answer == "\r":
             answer = dflt
@@ -55,23 +55,23 @@ def ynaq(question, dflt="y", aprompt=None, echo=False):
         elif answer == "q":
             if echo:
                 msvcrt.putch(answer)
-                print
+                print()
             raise Quit("user quit")
         else:
             msvcrt.putch(answer)
             answer = None
-            print
+            print()
 
     if echo:
         msvcrt.putch(answer)
-        print
+        print()
 
     return rc
 
 def yn(question, dflt="y", echo=False):
     answer = None
     while answer == None:
-        print question, "(y,n) [%s]? " % dflt,
+        print(question, "(y,n) [%s]? " % dflt, end="")
         answer = string.lower(msvcrt.getch())
         if answer == "\r":
             answer = dflt
@@ -82,11 +82,11 @@ def yn(question, dflt="y", echo=False):
         else:
             msvcrt.putch(answer)
             answer = None
-            print
+            print()
 
     if echo:
         msvcrt.putch(answer)
-        print
+        print()
 
     return rc
 
@@ -123,37 +123,37 @@ def backup(srcroot, dstroot, srcdir, dirs, srcfiles):
     reldir = srcdir.replace(srcroot, "", 1)
     dstdir = dstroot + reldir
     if Verbose:
-        print srcdir, "->", dstdir
+        print(srcdir, "->", dstdir)
 
     # create dstdir if necessary
 
     if (not os.path.exists(dstdir)):
 
         if skippedDestDir(dstdir):
-            print "  SKIPPED:", dstdir
+            print("  SKIPPED:", dstdir)
             return
 
-        print "  NEW DIR:", dstdir,
+        print("  NEW DIR:", dstdir,)
         try:
             if Copymode == NO:
-                print "(no)"
+                print("(no)")
                 addSkippedDestDir(dstdir)
                 return
             if Copymode == A:
                 ans = ynaq("", "y")
                 if ans == NO:
-                    print "no"
+                    print("no")
                     addSkippedDestDir(dstdir)
                     return
                 if ans == A:
                     Copymode = YES
 
             os.mkdir(dstdir)
-            print "(ok)"
+            print("(ok)")
             check_for_deletes = False
         except IOError:
-            print "(err)"
-            print >>sys.stderr, "Can't create dir: %s:", IOError
+            print("(err)")
+            print("Can't create dir: %s:", IOError, file=sys.stderr)
             return(False)
 
     # copy any newer files
@@ -165,33 +165,33 @@ def backup(srcroot, dstroot, srcdir, dirs, srcfiles):
         try:
             dststat = os.stat(dstfname)
         except OSError:
-            print "  MISSING:", srcfname,
+            print("  MISSING:", srcfname,)
             copy = True
         else:
             if srcstat[stat.ST_MTIME] > dststat[stat.ST_MTIME]:
-                print "  NEWER:  ", srcfname,
+                print("  NEWER:  ", srcfname, end="")
                 copy = True
         if copy:
             if Copymode == NO:
-                print "(no)"
+                print("(no)")
                 continue
             if Copymode == A:
                 ans = ynaq("", "y")
                 if ans == NO:
-                    print "no"
+                    print("no")
                     continue
                 if ans == A:
                     Copymode = YES
             try:
                 shutil.copy(srcfname, dstfname)
-            except IOError, msg:
-                print >>sys.stderr, "Error:", msg
+            except IOError as msg:
+                print("Error:", msg, file=sys.stderr)
             else:
                 try:
                     os.utime(dstfname, (srcstat[stat.ST_ATIME], srcstat[stat.ST_MTIME]))
-                except OSError, msg:
-                    print >>sys.stderr, "\n  Warning: can't set time: ", msg
-                print " (ok)"
+                except OSError as msg:
+                    print("\n  Warning: can't set time: ", msg, file=sys.stderr)
+                print(" (ok)")
 
     # delete any files on dst that aren't on src
     ii = 0
@@ -217,20 +217,20 @@ def backup(srcroot, dstroot, srcdir, dirs, srcfiles):
             delete = True
 
         if delete:
-            print "  DELETE: ", dstpath,
+            print("  DELETE: ", dstpath, end="")
             if Delmode == NO:
-                print "(no)"
+                print("(no)")
                 continue
             if Delmode == A:
                 ans = ynaq("", "y")
                 if ans == NO:
-                    print "no"
+                    print("no")
                     continue
                 if ans == A:
                     Delmode = YES
 
             os.unlink(dstpath)
-            print "(ok)"
+            print("(ok)")
 
     return(False)
 
@@ -240,9 +240,9 @@ def copydel():
     line = ""
 
     try:
-        cfg_file = file(cfg_file_name, "r")
+        cfg_file = open(cfg_file_name, "r")
     except:
-        print >>sys.stderr, "Can't open config file,", cfg_file_name
+        print("Can't open config file,", cfg_file_name, file=sys.stderr)
         sys.exit(1)
 
     for line in cfg_file:
@@ -258,9 +258,9 @@ def copydel():
         # line = chr_combine(line, " ")
         try:
             (act, arch) = line.split("|")
-        except ValueError, err:
-            print "Invalid config line: no '|' or too many:"
-            print line
+        except ValueError as err:
+            print("Invalid config line: no '|' or too many:")
+            print(line)
             if not yn("Continue", "n"):
                 raise Quit("User Quit")
 
@@ -273,7 +273,7 @@ def copydel():
             dest = act
             src  = arch
 
-        print "%s --> %s" % (src, dest)
+        print("%s --> %s" % (src, dest))
 
         found_files = False
         for (root, dirs, files) in os.walk(src):
@@ -281,7 +281,7 @@ def copydel():
             if (backup(src, dest, root, dirs, files)):
                 return
         if not found_files:
-            print >>sys.stderr, "Can't open source dir '%s'" % act
+            print("Can't open source dir '%s'" % act, file=sys.stderr)
             if not yn("Continue with subsequent lines", "n"):
                 raise Quit("User Quit")
 
@@ -309,7 +309,7 @@ def init():
 def main():
 
     title = win32api.GetConsoleTitle()
-    print
+    print()
 
     done = False
     while not done:
@@ -317,19 +317,19 @@ def main():
         init()
         try:
             get_parms()
-            print
+            print()
             copydel()
 
         except Quit:
             pass
 
-        print
+        print()
 
         if title.endswith("python.exe"):
-            print "Note: When you quit, this window will disappear."
+            print("Note: When you quit, this window will disappear.")
 
         answ = yn("Start again", "n", echo=True)
-        print
+        print()
         if answ == NO:
             done = True
 

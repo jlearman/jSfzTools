@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python3
 # Chop a wave file into separate sample files.
 # For use in building soundfonts.
 #
@@ -67,8 +67,12 @@ def find_trigger(wave, start_sn, trig_dB):
     while True:
         try:
             samp = wave.readSample()
-        except IndexError:
+        except EOFError:
+            print("indexError")
             return 0
+        except Exception as e:
+            print(e)
+            sys.exit(1)
         if abs(samp[0]) > trigger:
             break;
         samp_num += 1
@@ -81,7 +85,7 @@ def find_trigger(wave, start_sn, trig_dB):
 #
 def measure_rms(wave, start_sn, duration):
 
-    if duration < wave.fmt.sampleRate / 200:
+    if duration < wave.fmt.sampleRate // 200:
         return 0.0
 
     wave.seekSample(start_sn)
@@ -95,7 +99,7 @@ def measure_rms(wave, start_sn, duration):
 
 
 def r(samps, delta, length):
-    sum = 0L
+    sum = 0
     for sn in range(1, length):
         sum += abs(samps[sn] - samps[sn + delta])
     return sum
@@ -104,7 +108,7 @@ def find_pitch(wave, start):
     global _pitchlog
     guess = False
 
-    start += wave.fmt.sampleRate / 4
+    start += wave.fmt.sampleRate // 4
 
     # Get a buffer of samples for finding the pitch
     end = min(wave.numSamples-1, start + 4 * wave.fmt.sampleRate)
@@ -122,7 +126,7 @@ def find_pitch(wave, start):
 
     latch = 3
 
-    maxr = 0L
+    maxr = 0
     maxt = 0
     step = 12.0
     rate = 1.0 * wave.fmt.sampleRate
@@ -131,12 +135,11 @@ def find_pitch(wave, start):
     delta = 4
 
     # for delta in range(wave.fmt.sampleRate / _max_freq, wave.fmt.sampleRate / _min_freq):
-    while delta < wave.fmt.sampleRate / _min_freq:
+    while delta < wave.fmt.sampleRate // _min_freq:
 
-        cur = r(samps, delta, buflen / 2)
+        cur = r(samps, delta, buflen // 2)
         if _log_pitch:
-            print >>_pitchlog, wave.fmt.sampleRate / delta, ",", cur
-
+            print(wave.fmt.sampleRate / delta, ",", cur, file=_pitchlog)
         if cur > maxr:
             maxr = cur
             maxt = delta
@@ -147,28 +150,28 @@ def find_pitch(wave, start):
         delta = max(d2, delta + 1)
         last_note = note
         note = 12 * math.log(rate/delta)
-        # print "delta = %d, f = %d, note = %5.1f, diff = %5.1f" % (
-        #     delta, rate/delta, note, last_note - note)
+        # print("delta = %d, f = %d, note = %5.1f, diff = %5.1f" % (
+        #     delta, rate/delta, note, last_note - note))
 
     else:
-        print "    Can't find pitch (1)."
-        print "    maxt", maxt
-        print "    delta", delta
-        print "    latch", latch
+        print("    Can't find pitch (1).")
+        print("    maxt", maxt)
+        print("    delta", delta)
+        print("    latch", latch)
         return 0
         # raise Exception("Sample too short (1)")
 
     # find the next local minumum.
 
-    minr = 0x7fffffffffffffffL
+    minr = 0x7fffffffffffffff
     mint = 0
-    limit = maxr / 3
+    limit = maxr // 3
     # for delta in range(delta + 1, wave.fmt.sampleRate / _min_freq):
-    while delta < wave.fmt.sampleRate / _min_freq:
+    while delta < wave.fmt.sampleRate // _min_freq:
 
-        cur = r(samps, delta, buflen / 2)
+        cur = r(samps, delta, buflen // 2)
         if _log_pitch:
-            print >>_pitchlog, wave.fmt.sampleRate / delta, ",", cur
+            print(wave.fmt.sampleRate // delta, ",", cur, file=_pitchlog)
 
         if cur < minr:
             minr = cur
@@ -182,20 +185,20 @@ def find_pitch(wave, start):
         delta = max(d2, delta + 1)
         last_note = note
         note = 12 * math.log(rate/delta)
-        # print "delta = %d, f = %d, note = %5.1f, diff = %5.1f" % (
-        #     delta, rate/delta, note, last_note - note)
+        # print("delta = %d, f = %d, note = %5.1f, diff = %5.1f" % (
+        #     delta, rate/delta, note, last_note - note))
 
     else:
         guess = True
-        print
-        print "    Can't find pitch (2).  Returning best guess."
-        print "    start", start
-        print "    maxr", maxr
-        print "    maxt", maxt
-        print "    minr", minr
-        print "    mint", mint
-        print "    delta", delta
-        print "    latch", latch
+        print()
+        print("    Can't find pitch (2).  Returning best guess.")
+        print("    start", start)
+        print("    maxr", maxr)
+        print("    maxt", maxt)
+        print("    minr", minr)
+        print("    mint", mint)
+        print("    delta", delta)
+        print("    latch", latch)
         # return 0
         # if not _log_pitch:
             # raise Exception("Sample too short (2)")
@@ -233,9 +236,9 @@ def find_nth_zero(wave, start_sn, end_sn, slope=1, count=_lead_crossings):
     best = 0
     for ix in range(start_ix + incr, stop_ix, incr):
         this = samps[ix]
-        # print first_sn + ix, this     ##################################
+        # print(first_sn + ix, this)    ##################################
         if last * slope < 0 and this * slope >= 0:
-            # print first_sn + ix, last, this, slope
+            # print(first_sn + ix, last, this, slope)
             count -= 1
             best = first_sn + ix
             if count == 0:
@@ -246,9 +249,9 @@ def find_nth_zero(wave, start_sn, end_sn, slope=1, count=_lead_crossings):
         return best
 
     if True:
-        print "  start_sn ", start_sn
-        print "  end_sn   ", end_sn
-        print "  slope    ", slope
+        print("  start_sn ", start_sn)
+        print("  end_sn   ", end_sn)
+        print("  slope    ", slope)
     raise Exception("No zero crossing found with required slope")
 
 
@@ -262,12 +265,12 @@ def find_nth_zero(wave, start_sn, end_sn, slope=1, count=_lead_crossings):
 #   at the end of the note.
 
 def find_end(wave, start_sn, noise, dwell_t, max_t):
-    calc_interval = wave.fmt.sampleRate / _calcs_per_sec
+    calc_interval = wave.fmt.sampleRate // _calcs_per_sec
     noise = max(noise, -60.0)
 
     dwell_t = int(dwell_t * wave.fmt.sampleRate)
     max_t   = int(max_t   * wave.fmt.sampleRate)
-    # print "### max_t =", jtime.sm(max_t, wave.fmt.sampleRate)
+    # print("### max_t =", jtime.sm(max_t, wave.fmt.sampleRate))
 
     buf = jwave.Rmsbuf(wave, 0)
     wave.seekSample(start_sn)
@@ -278,7 +281,7 @@ def find_end(wave, start_sn, noise, dwell_t, max_t):
         try:
             buf.add(buf, wave.readSample()[0])
         except IndexError:
-            print "  Sample file ends before silence"
+            print("  Sample file ends before silence")
             return (start_sn + sn, start_sn + sn, buf.getPeak())
         if sn % calc_interval == 0:
             rms = buf.getRms()
@@ -289,7 +292,7 @@ def find_end(wave, start_sn, noise, dwell_t, max_t):
                 return (end_sn, limit_sn, buf.getPeak())
         if not limit_sn and sn > max_t:
             limit_sn = buf.findPrevCrossing() + start_sn
-            # print "### found limit at", jtime.sm(limit_sn, wave.fmt.sampleRate)
+            # print("### found limit at", jtime.sm(limit_sn, wave.fmt.sampleRate))
         sn += 1
 
     raise Exception("Can't find sample end")
@@ -324,8 +327,8 @@ def copy_wave(iwave, start_sn, end_sn, file_num, freq, guess, sn_ratio, peak, du
         (mnote, notename, cents) = jmidi.midi_note_for_freq(freq)
 
     fname = wavename(_folder, _fn_prefix, mnote, notename, guess, _fn_suffix)
-    print "File %3d:" % file_num, fname
-    print >>_logfile, _fn_prefix        \
+    print("File %3d:" % file_num, fname)
+    print(_fn_prefix                    \
         ,",", file_num                  \
         ,",", mnote                     \
         ,",", notename.strip("_")       \
@@ -333,15 +336,17 @@ def copy_wave(iwave, start_sn, end_sn, file_num, freq, guess, sn_ratio, peak, du
         ,",", "%7.2f" % freq            \
         ,",", "%4.1f" % sn_ratio        \
         ,",", "%4.1f" % peak            \
-        ,",", jtime.sm(duration, iwave.fmt.sampleRate) + "s"
+        ,",", jtime.sm(duration, iwave.fmt.sampleRate) + "s",
+        file=_logfile)
 
     if not _dry_run:
-        ofile = file(fname, "wb")
+        ofile = open(fname, "wb")
         owave = jwave.WaveChunk(outf = ofile)
         owave.copyHeader(iwave)
         # owave.setNote(mnote)
         owave.writeHeader(end_sn + 1 - start_sn)
         owave.copySamples(iwave, start_sn, end_sn)
+        ofile.close()
 
 
 # find first zero crossing before trig_sn, where
@@ -352,7 +357,7 @@ def find_start(wave, trig_sn, start_sn):
 
     vbose = True
     if vbose:
-        print "   ",
+        print("   ", end="")
 
     # read channel 1 samples into buffer
 
@@ -372,10 +377,10 @@ def find_start(wave, trig_sn, start_sn):
 
         if -noise < this < noise:
             if vbose:
-                print ".",
+                print(".", end="")
             if abs(this - last) < noise:
                 if vbose:
-                    print
+                    print()
                 return start_sn + ix
 
         last = this
@@ -403,10 +408,10 @@ def old_find_start(wave, trig_sn, start_sn):
 
     for ix in range(start_ix - 1, 0, -1):
 
-        # print "%6d %6d" % (ix, this)
+        # print("%6d %6d" % (ix, this))
 
         if abs(samps[ix]) < noise:
-            # print ".",
+            # print(".", end="")
             count += 1
             if count == N:
                 return start_sn + ix
@@ -418,138 +423,139 @@ def old_find_start(wave, trig_sn, start_sn):
 def process_samples():
     global _default_noise
 
-    try:
-        inf  = file(_infile, "rb")
-    except IOError, msg:
-        raise IOError(msg)
+    with open(_infile, "rb") as inf:
 
-    riff = jwave.RiffChunk(inf)
-    riff.readHeader()
-    riff.printHeader()
-    # if riff.type != "riff":
-    #     print "Unsupported format (only wave files supported)"
-    #     return 1
+        riff = jwave.RiffChunk(inf)
+        riff.readHeader()
+        riff.printHeader()
+        # if riff.type != "riff":
+        #     print("Unsupported format (only wave files supported)")
+        #     return 1
 
-    wave = jwave.WaveChunk(riff=riff, inf=inf)
-    wave.readHeader()
-    wave.printHeader()
-    rate = wave.fmt.sampleRate
+        wave = jwave.WaveChunk(riff=riff, inf=inf)
+        wave.readHeader()
+        wave.printHeader()
+        rate = wave.fmt.sampleRate
 
-    if wave.fmt.compCode != 1:
-        print "Compressed formats unsupported"
-        sys.exit(1)
+        if wave.fmt.compCode != 1:
+            print("Compressed formats unsupported")
+            inf.close()
+            print(" ### %s CLOSE" % _infile)
+            sys.exit(1)
 
-    print
-    file_num = 1
-    end_sn = 1          # sample number at end of last note
-    while True:
-        t = jtime.start()
+        print()
+        file_num = 1
+        end_sn = 1          # sample number at end of last note
+        while True:
+            t = jtime.start()
 
-        # 1) find the next peak that exceeds the trigger level
+            # 1) find the next peak that exceeds the trigger level
 
-        trig_sn = find_trigger(wave, end_sn, trig_dB=_trig_db)
-        if trig_sn == 0:
-            return              ## EOF, we're done.
+            trig_sn = find_trigger(wave, end_sn, trig_dB=_trig_db)
+            if trig_sn == 0:
+                inf.close()
+                print(" ### %s CLOSE on return" % _infile)
+                return              ## EOF, we're done.
 
-        if _verbose:
-            print
-            print "    trig_sn      ", trig_sn, jtime.hmsm(trig_sn, rate)
-
-        # 2) Starting from the trigger point, search backwards to find the
-        #    first positive sloped zero crossing.  Search at most a fraction of a second.
-
-        end_sn = max(end_sn, trig_sn - rate/10)
-        print "end_sn", end_sn, "trig_sn", trig_sn
-        # start_sn = find_nth_zero(wave, trig_sn, end_sn, slope=1)
-        start_sn = find_start(wave, trig_sn, end_sn)
-        start_sn = max(1, start_sn - int(_lead_time * rate))
-
-        if _verbose:
-            print "    start_sn     ", start_sn, jtime.hmsm(start_sn, rate)
-
-        # 3) Back up at most a second and measure a half-second of noise
-
-        if _measure_noise:
-            noise_sn = max(1, start_sn - rate)
-            dur = min(rate / 2, (start_sn - noise_sn) / 2)
-            noise_lev = measure_rms(wave, noise_sn, dur)
-            if noise_lev == None or noise_lev == 0.0:
-                print "  Can't measure noise, using %5.2f dB" % _default_noise
-                noise_lev = _default_noise
-            else:
-                # use this value if we can't measure it later
-                _default_noise = noise_lev
-        else:
-            noise_lev = _default_noise
-
-        if _verbose:
-            print "    noise_lev    ", noise_lev
-
-        # 4) Find where the sample ends:
-        #    where the RMS level matches the initial noise level plus a delta,
-        #    plus a dwell time.
-        (end_sn, limit_sn, peak_lev) = find_end(wave, trig_sn, noise_lev + _noise_delta,
-            _dwell_time, _max_duration)
-
-        sdur = limit_sn - start_sn
-        ndur = end_sn - start_sn
-        if _verbose:
-            print "    end_sn       ", end_sn, jtime.hmsm(end_sn, rate)
-            print "    limit_sn     ", limit_sn, jtime.hmsm(end_sn, rate)
-            print "    note duration", jtime.sm(ndur, rate)
-            print "    samp duration", jtime.sm(sdur, rate)
-
-        if ndur < _min_duration * wave.fmt.sampleRate:
             if _verbose:
-                print "    Skipping .. too short"
-                print
-            continue
+                print()
+                print("    trig_sn      ", trig_sn, jtime.hmsm(trig_sn, rate))
+
+            # 2) Starting from the trigger point, search backwards to find the
+            #    first positive sloped zero crossing.  Search at most a fraction of a second.
+
+            end_sn = max(end_sn, trig_sn - rate//10)
+            # print("    end_sn", end_sn, "trig_sn", trig_sn)
+            # start_sn = find_nth_zero(wave, trig_sn, end_sn, slope=1)
+            start_sn = find_start(wave, trig_sn, end_sn)
+            start_sn = max(1, start_sn - int(_lead_time * rate))
+
+            if _verbose:
+                print("    start_sn     ", start_sn, jtime.hmsm(start_sn, rate))
+
+            # 3) Back up at most a second and measure a half-second of noise
+
+            if _measure_noise:
+                noise_sn = max(1, start_sn - rate)
+                dur = min(rate // 2, (start_sn - noise_sn) // 2)
+                noise_lev = measure_rms(wave, noise_sn, dur)
+                if noise_lev == None or noise_lev == 0.0:
+                    print("  Can't measure noise, using %5.2f dB" % _default_noise)
+                    noise_lev = _default_noise
+                else:
+                    # use this value if we can't measure it later
+                    _default_noise = noise_lev
+            else:
+                noise_lev = _default_noise
+
+            if _verbose:
+                print("    noise_lev    ", noise_lev)
+
+            # 4) Find where the sample ends:
+            #    where the RMS level matches the initial noise level plus a delta,
+            #    plus a dwell time.
+            (end_sn, limit_sn, peak_lev) = find_end(wave, trig_sn, noise_lev + _noise_delta,
+                _dwell_time, _max_duration)
+
+            sdur = limit_sn - start_sn
+            ndur = end_sn - start_sn
+            if _verbose:
+                print("    end_sn       ", end_sn, jtime.hmsm(end_sn, rate))
+                print("    limit_sn     ", limit_sn, jtime.hmsm(end_sn, rate))
+                print("    note duration", jtime.sm(ndur, rate))
+                print("    samp duration", jtime.sm(sdur, rate))
+
+            if ndur < _min_duration * wave.fmt.sampleRate:
+                if _verbose:
+                    print("    Skipping .. too short")
+                    print()
+                continue
 
 
-        # 5) Find which note the sample is
-        if _find_note:
-            freq, guess = find_pitch(wave, trig_sn)
+            # 5) Find which note the sample is
+            if _find_note:
+                freq, guess = find_pitch(wave, trig_sn)
 
-        if _verbose:
-            print "    freq         ", freq
-            print
+            if _verbose:
+                print("    freq         ", freq)
+                print()
 
-        # 6) Record results & copy wave data
+            # 6) Record results & copy wave data
 
-        if _debug:
-            print
-            print "%3d freq: %-6.1f floor:%5.1f peak:%5.1f S/N: %-5.1f start:%d=%9s dur:%9s" % (
-                file_num,
-                freq,
-                noise_lev,
-                peak_lev,
-                peak_lev - noise_lev,
-                start_sn, jtime.msm(start_sn, rate),
-                jtime.msm(sdur, rate),
-                jtime.msm(ndur, rate),
-                )
+            if _debug:
+                print()
+                print("%3d freq: %-6.1f floor:%5.1f peak:%5.1f S/N: %-5.1f start:%d=%9s dur:%9s" % (
+                    file_num,
+                    freq,
+                    noise_lev,
+                    peak_lev,
+                    peak_lev - noise_lev,
+                    start_sn, jtime.msm(start_sn, rate),
+                    jtime.msm(sdur, rate),
+                    jtime.msm(ndur, rate),
+                    ))
 
-        copy_wave(wave, start_sn, limit_sn, file_num, freq, guess, peak_lev - noise_lev, peak_lev, sdur)
-        file_num += 1
+            copy_wave(wave, start_sn, limit_sn, file_num, freq, guess, peak_lev - noise_lev, peak_lev, sdur)
+            file_num += 1
 
-        t = jtime.end(t)
-        print
-        print "    Elapsed time:", jtime.msm(t, 1)
+            t = jtime.end(t)
+            print()
+            print("    Elapsed time:", jtime.msm(t, 1))
 
 def usage(prog):
-    print >>sys.stderr
-    print >>sys.stderr, "%s: cut wave file into individual samples" % prog
-    print >>sys.stderr
-    print >>sys.stderr, "  Usage: %s {[-f <outfolder>] {<wavefile>}}" % prog
-    print >>sys.stderr
-    print >>sys.stderr, "where:"
-    print >>sys.stderr, "  { x } means 'any number of x'"
-    print >>sys.stderr, "  -f <outfolder> specifies the output folder for"
-    print >>sys.stderr, "     sample files for following input wave files."
-    print >>sys.stderr, "  <wavefile> is a wave file containing mutliple"
-    print >>sys.stderr, "     samples.  Unix-style globbing is permitted,"
-    print >>sys.stderr, "     that is, you can use '*.wav' or 'samp*/my*foo.wav'."
-    print >>sys.stderr
+    print(file=sys.stderr)
+    print("%s: cut wave file into individual samples" % prog, file=sys.stderr)
+    print(file=ys.stderr)
+    print("  Usage: %s {[-f <outfolder>] {<wavefile>}}" % prog, file=sys.stderr)
+    print(file=sys.stderr)
+    print("where:", file=sys.stderr)
+    print("  { x } means 'any number of x'", file=sys.stderr)
+    print("  -f <outfolder> specifies the output folder for", file=sys.stderr)
+    print("     sample files for following input wave files.", file=sys.stderr)
+    print("  <wavefile> is a wave file containing mutliple", file=sys.stderr)
+    print("     samples.  Unix-style globbing is permitted,", file=sys.stderr)
+    print("     that is, you can use '*.wav' or 'samp*/my*foo.wav'.", file=sys.stderr)
+    print(file=sys.stderr)
     sys.exit(1)
 
 
@@ -568,7 +574,7 @@ def main(prog, args):
         return 1
 
     if _log_pitch:
-        print "OPENING PITCH LOG"
+        print("OPENING PITCH LOG")
         _pitchlog = open("pitch.csv", "w")
 
     t1 = jtime.start()
@@ -578,7 +584,7 @@ def main(prog, args):
 
         if len(args) > 2 and args[0] == "-f":
             _folder = args[1] + "/"
-            print "Output folder:", args[1]
+            print("Output folder:", args[1])
             del args[0]
             del args[0]
 
@@ -591,8 +597,8 @@ def main(prog, args):
         for _infile in glob.glob(fspec):
 
             file_count += 1
-            print "\nProcessing", _infile, "==================================="
-            print
+            print("\nProcessing", _infile, "===================================")
+            print()
 
             # Split the file name into prefix (inst name) and suffix (velocity)
 
@@ -604,19 +610,20 @@ def main(prog, args):
             _fn_prefix = parts[0] + "_"
             del parts[0]
             _fn_suffix = "_" + "_".join(parts)
-            print "prefix =", _fn_prefix
-            print "suffix =", _fn_suffix
+            print("prefix =", _fn_prefix)
+            print("suffix =", _fn_suffix)
 
             _logfile = open(_folder + _fn_prefix + _fn_suffix[1:] + "_log.csv", "w")
-            print >>_logfile, "fn_prefix"       \
-                ,",", "file_num"                \
+            print("fn_prefix"           \
+                ,",", "file_num"        \
                 ,",", "mnote"           \
-                ,",", "notename"                \
+                ,",", "notename"        \
                 ,",", "cents"           \
                 ,",", "freq"            \
-                ,",", "sn_ratio"                \
+                ,",", "sn_ratio"        \
                 ,",", "peak"            \
-                ,",", "duration"
+                ,",", "duration"        \
+                , file=_logfile)
 
             t2 = jtime.start()
             try:
@@ -624,20 +631,21 @@ def main(prog, args):
                     rCode = profile.run("process_samples()")
                 else:
                     rCode = process_samples()
-            except IOError, msg:
-                print msg
+            except IOError as msg:
+                print(msg)
                 if len(args) > 0:
-                    print "Skipping ..."
+                    print("Skipping ", _infile, file=sys.stderr)
+                    _logfile.close()
                     continue
 
-            print
-            print "Elapsed time for %s: " % _infile, jtime.hms(jtime.end(t2), 1)
+            print()
+            print(("Elapsed time for %s: " % _infile), jtime.hms(jtime.end(t2), 1))
 
             _logfile.close()
 
     if file_count > 1:
-        print
-        print "Elapsed time for all files:", jtime.hms(jtime.end(t1), 1)
+        print()
+        print("Elapsed time for all files:", jtime.hms(jtime.end(t1), 1))
 
     return rCode
 
@@ -661,12 +669,12 @@ if __name__ == "__main__":
 
     while True:
 
-        print "Args: (^C to exit)",
+        print("Args: (^C to exit)", end="")
 
         try:
-            print
+            print()
             main(sys.stdin.readline())
-            print
+            print()
         except KeyboardInterrupt:
             sys.exit(0)
 

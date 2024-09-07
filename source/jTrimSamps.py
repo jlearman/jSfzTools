@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python3
 
 # Trim a sample wave file to remove latency (relative silence before first transient).
 # Suitable for sampled instruments like piano which have a percussive start.
@@ -128,9 +128,9 @@ def find_nth_zero(wave, start_sn, end_sn, slope=1, count=_lead_crossings):
     best = 0
     for ix in range(start_ix + incr, stop_ix, incr):
         this = samps[ix]
-        # print first_sn + ix, this     ##################################
+        # print(first_sn + ix, this)     ##################################
         if last * slope < 0 and this * slope >= 0:
-            # print first_sn + ix, last, this, slope
+            # print(first_sn + ix, last, this, slope)
             count -= 1
             best = first_sn + ix
             if count == 0:
@@ -141,9 +141,9 @@ def find_nth_zero(wave, start_sn, end_sn, slope=1, count=_lead_crossings):
         return best
 
     if True:
-        print "  start_sn ", start_sn
-        print "  end_sn   ", end_sn
-        print "  slope    ", slope
+        print("  start_sn ", start_sn)
+        print("  end_sn   ", end_sn)
+        print("  slope    ", slope)
     raise Exception("No zero crossing found with required slope")
 
 
@@ -151,7 +151,7 @@ def fade_in_and_copy_wave(iwave, outf, filter_start_sn, start_sn, peakdb):
 
     samp_count = iwave.get_sample_count()
     if _dry_run:
-        print "  Copy orig samples %d to %d" % (filter_start_sn, samp_count)
+        print("  Copy orig samples %d to %d" % (filter_start_sn, samp_count))
         return
 
     # set up output file
@@ -199,7 +199,7 @@ def find_start_old(wave, trig_sn, start_sn):
 
     vbose = True
     if vbose:
-        print "   ",
+        print("   ", end="")
 
     # read channel 1 samples into buffer
 
@@ -238,7 +238,7 @@ def find_start(wave, trig_sn, start_sn, peakdb):
 
     vbose = True
     if vbose:
-        print "   ",
+        print("   ", end="")
 
     # read channel 1 samples into buffer
 
@@ -277,7 +277,7 @@ def process_sample(inf, outf):
     riff.readHeader()
     riff.printHeader()
     # if riff.type != "riff":
-    #     print "Unsupported format (only wave files supported)"
+    #     print("Unsupported format (only wave files supported)")
     #     return 1
 
     wave = jwave.WaveChunk(riff=riff, inf=inf)
@@ -286,10 +286,10 @@ def process_sample(inf, outf):
     rate = wave.fmt.sampleRate
 
     if wave.fmt.compCode != 1 and wave.fmt.compCode != 0xfffe:
-        print "Compressed formats unsupported"
+        print("Compressed formats unsupported")
         sys.exit(1)
 
-    print
+    print()
     end_sn = 1          # sample number at end of last note
 
     t = jtime.start()
@@ -306,8 +306,8 @@ def process_sample(inf, outf):
         return 0                ## EOF, we're done.
 
     if _verbose:
-        print
-        print "    trig_sn      ", trig_sn, jtime.hmsm(trig_sn, rate)
+        print()
+        print("    trig_sn      ", trig_sn, jtime.hmsm(trig_sn, rate))
 
     # 2) Starting from the trigger point, search backwards to find the
     #    first positive sloped zero crossing.  Search at most a fraction of a second.
@@ -317,38 +317,38 @@ def process_sample(inf, outf):
     start_sn = find_start(wave, trig_sn, window_sn, peakdb)
 
     if _verbose:
-        print "    start_sn     ", start_sn, jtime.hmsm(start_sn, rate)
+        print("    start_sn     ", start_sn, jtime.hmsm(start_sn, rate))
 
     # Back up at most 1 msec to allow room for fade in
     rate = wave.fmt.sampleRate
     filt_start_sn = max(0, start_sn - rate / 1000)
 
     msec_trimmed = ((filt_start_sn * 1000) / rate)
-    print "    trimming %3d msec" % msec_trimmed
+    print("    trimming %3d msec" % msec_trimmed)
 
     # HERE
     fade_in_and_copy_wave(wave, outf, filt_start_sn, start_sn, peakdb)
 
     t = jtime.end(t)
-    print
-    print "    Elapsed time:", jtime.msm(t, 1)
+    print()
+    print("    Elapsed time:", jtime.msm(t, 1))
 
     return msec_trimmed
 
 def usage(prog):
-    print >>sys.stderr
-    print >>sys.stderr, "%s: Trim start of wave file" % prog
-    print >>sys.stderr
-    print >>sys.stderr, "  Usage: %s {[-f <outfolder>] {<wavefile>}}" % prog
-    print >>sys.stderr
-    print >>sys.stderr, "where:"
-    print >>sys.stderr, "  { x } means 'any number of x'"
-    print >>sys.stderr, "  -f <outfolder> specifies the output folder for"
-    print >>sys.stderr, "     sample files for following input wave files."
-    print >>sys.stderr, "  <wavefile> is a wave file containing a single sample."
-    print >>sys.stderr, "     Unix-style globbing is permitted,"
-    print >>sys.stderr, "     that is, you can use '*.wav' or 'samp*/my*foo.wav'."
-    print >>sys.stderr
+    print(file=sys.stderr)
+    print("%s: Trim start of wave file" % prog, file=sys.stderr)
+    print(file=sys.stderr)
+    print("  Usage: %s {[-f <outfolder>] {<wavefile>}}" % prog, file=sys.stderr)
+    print(file=sys.stderr)
+    print("where:", file=sys.stderr)
+    print("  { x } means 'any number of x'", file=sys.stderr)
+    print("  -f <outfolder> specifies the output folder for", file=sys.stderr)
+    print("     sample files for following input wave files.", file=sys.stderr)
+    print("  <wavefile> is a wave file containing a single sample.", file=sys.stderr)
+    print("     Unix-style globbing is permitted,", file=sys.stderr)
+    print("     that is, you can use '*.wav' or 'samp*/my*foo.wav'.", file=sys.stderr)
+    print(file=sys.stderr)
     sys.exit(1)
 
 
@@ -377,7 +377,7 @@ def main(prog, args):
 
         if len(args) > 2 and args[0] == "-f":
             _folder = args[1] + "/"
-            print "Output folder:", args[1]
+            print("Output folder:", args[1])
             del args[0]
             del args[0]
 
@@ -394,16 +394,16 @@ def main(prog, args):
             basename = jtrans.tr(ifname, "\\", "/")
             basename = basename.split("/")[-1]          # strip path
             ofname = _folder + "/" + basename
-            print "\nProcessing", ifname, "to", ofname, "==================================="
-            print
+            print("\nProcessing", ifname, "to", ofname, "===================================")
+            print()
             try:
-                inf  = file(ifname, "rb")
-            except IOError, msg:
+                inf  = open(ifname, "rb")
+            except IOError as msg:
                 raise IOError(msg)
 
             try:
-                outf = file(ofname, "wb")
-            except IOError, msg:
+                outf = open(ofname, "wb")
+            except IOError as msg:
                 raise IOError(msg)
 
             t2 = jtime.start()
@@ -412,7 +412,7 @@ def main(prog, args):
                     rCode = profile.run("process_sample(inf, outf)")
                 else:
                     msecs_trimmed = process_sample(inf, outf)
-            except IOError, msg:
+            except IOError as msg:
                 print msg
                 if len(args) > 0:
                     print "Skipping ..."
@@ -422,14 +422,14 @@ def main(prog, args):
             tot_msecs_trimmed += msecs_trimmed
             tot_files_trimmed += 1
 
-            print
-            print "Elapsed time for %s: " % ifname, jtime.hms(jtime.end(t2), 1)
+            print()
+            print("Elapsed time for %s: " % ifname, jtime.hms(jtime.end(t2), 1))
 
     if file_count > 1:
-        print
-        print "Elapsed time for all files:", jtime.hms(jtime.end(t1), 1)
-        print "Average of %3d msec trimmed" % (tot_msecs_trimmed/tot_files_trimmed)
-        print "Max     of %3d msec trimmed" % max_msecs_trimmed
+        print()
+        print("Elapsed time for all files:", jtime.hms(jtime.end(t1), 1))
+        print("Average of %3d msec trimmed" % (tot_msecs_trimmed/tot_files_trimmed))
+        print("Max     of %3d msec trimmed" % max_msecs_trimmed)
 
     return rCode
 

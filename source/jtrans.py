@@ -2,11 +2,12 @@
 
 import string
 
-def tr(input, fromstr, tostr, deletechars=""):
+def tr(inp, fromstr, tostr, deletechars=""):
 
     if len(tostr) < len(fromstr):
         pad = tostr[-1]
         while len(tostr) < len(fromstr):
             tostr += pad
-    trans = string.maketrans(fromstr, tostr)
-    return(input.translate(trans, deletechars))
+    ret = inp.translate(inp.maketrans(fromstr, tostr))
+    ret = ret.translate(ret.maketrans("", "", deletechars))
+    return ret

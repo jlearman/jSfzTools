@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python3
 
 import struct
 
@@ -185,7 +185,7 @@ class Struct(Type):
         slen = 0
         ix = 0
         for field in self.fields:
-            # print "Struct.writeval:", val[ix], "type", field.type
+            # print("Struct.writeval:", val[ix], "type", field.type)
             slen += field.type.writeval(val[ix], outf)
             ix += 1
         return slen
@@ -205,7 +205,7 @@ class Struct(Type):
         if val == None:
             return
         if len(val) != len(self.fields):
-            print "%%% val = ", val
+            print("%%% val = ", val)
             raise Exception("ill-formed value for struct")
 
         level += 1

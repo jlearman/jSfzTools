@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python3
 
 import math
 
@@ -91,16 +91,16 @@ if __name__ == "__main__":
     args = sys.argv
 
     if len(args) < 2:
-        print "usage: %s {<note>} -- print MIDI note name/number" % args[0]
-        print
-        print "  If the argument is a number, it prints the name,"
-        print "  and vice-versa."
+        print("usage: %s {<note>} -- print MIDI note name/number" % args[0])
+        print()
+        print("  If the argument is a number, it prints the name,")
+        print("  and vice-versa.")
         sys.exit(1)
 
     while len(args) > 1:
         arg = args[1]
         del args[1]
 
-        print arg, "=", notename(arg), notenum(arg)
+        print(arg, "=", notename(arg), notenum(arg))
 
 
