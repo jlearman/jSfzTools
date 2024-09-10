@@ -35,8 +35,8 @@
 #   transpose (for Purgatory Creek that has to be transposed down 12 steps due to diff note/octave convention
 
 # TODO: add name to group & master.  (Omit master?)
-# TODO: support header/trailer (header, master, trailer?)
 # TODO: support loop_mode=one_shot (globally or for notes in a region.)  Omit ampeg_release
+# TODO: add "lowest-velocity" for piano low-velocity dead zone
 
 import sys
 import warnings
@@ -66,7 +66,7 @@ LXFOUT_HI       = 7
 #  lname        name
 #  lvel         velocity
 #  latten       sf attenuation for layer (obsolete?)
-#  llevel       amount layer was boosted by when normalized.
+#  llevel       amount layer was boosted by when normalized, in cB.
 #                 If zero, velocity curve adjustment not done.
 #  lprevlevel   amount previous layer was boosted by.
 #
@@ -161,7 +161,7 @@ def build_sampchars():
     return chars
 
 
-def load_filenames(args):
+def load_filenames(args, print_map=True):
     global gl
     global CROSSFADE
     global no_xfade
@@ -281,7 +281,10 @@ def load_filenames(args):
     # print the samples, along with a character to assigned for
     # showing the key map in showmap().
 
-    print("# Samples:", file=gl.ofile)
+    if print_map:
+        print("KEYBOARD MAPPING", file=gl.ofile)
+        print(file=gl.ofile)
+        print("Sample Table -- each character represents a sample:", file=gl.ofile)
 
     # if we're crossfading, calculate the crossfades
     if CROSSFADE:
@@ -312,8 +315,9 @@ def load_filenames(args):
     sampchars = build_sampchars()
 
     for layer in range(len(LAYER)-1, -1, -1):
-        print(("#   Layer %*s vel %3d: " % (gl.lnamelen, LAYER[layer][LNAME], LAYER[layer][LVEL])),
-            end=" ", file=gl.ofile)
+        if print_map:
+            print(("  Layer %*s vel %3d: " % (gl.lnamelen, LAYER[layer][LNAME], LAYER[layer][LVEL])),
+                end=" ", file=gl.ofile)
         for mnote in range(LO_KEY, HI_KEY+1):
             # samps = gl.grid[layer][mnote]
 
@@ -330,8 +334,10 @@ def load_filenames(args):
                     sampnum += 1
                     if sampnum >= len(sampchars):
                         sampnum = 0
-                print("%3s=%c" % (samp.notename, samp.char), end="", file=gl.ofile)
-        print(file=gl.ofile)
+                if print_map:
+                    print("%3s=%c" % (samp.notename, samp.char), end="", file=gl.ofile)
+        if print_map:
+            print(file=gl.ofile)
 
     print(file=gl.ofile)
 
@@ -448,6 +454,10 @@ def assign_keys():
 
 def showmap(grid, layerdata):
 
+    print("Map Table: each column is for a MIDI note.  Each row is for a MIDI velocity range.", file=gl.ofile)
+    print("Each character in the table is the charater for a sample, as shown in the section above.", file=gl.ofile)
+    print(file=gl.ofile)
+
     # Generate heading showing "piano keyboard" in three lines:
     # first line is octave number
     # second line is key name, omitting sharp or flat
@@ -458,26 +468,27 @@ def showmap(grid, layerdata):
     #    CDDEEFGGAABBCDDEEFGGAABBCDDEEFGGAABBCDDEEFGGAABB...
     #     b b  b b b  b b  b b b  b b  b b b  b b  b b b ...
 
-    line1 = line2 = line3 = ""
+    octave_line = note_line = sharpflat_line = ""
     for col in range(LO_KEY, HI_KEY+1):
         notename = jmidi.mnote_name(col, pad=None)
-        line2 += notename[0]
+        note_line += notename[0]
         if notename[1] == "b":
-            line3 += "b"
+            sharpflat_line += "b"
             octave = notename[2]
         else:
-            line3 += " "
+            sharpflat_line += " "
             octave = notename[1]
-        line1 += octave
+        octave_line += octave
 
     # print("keyboard")
-    print("#", line1, file=gl.ofile)
-    print("#", line2, file=gl.ofile)
-    print("#", line3, file=gl.ofile)
-    print("#", file=gl.ofile)
+    print(note_line, file=gl.ofile)
+    print(sharpflat_line, file=gl.ofile)
+    print(octave_line, file=gl.ofile)
+    print(file=gl.ofile)
 
     # print key assignments
 
+    # FIXME: find out why this is skipped for no-xfade
     for row in range(len(layerdata)-1, -1, -1):
         line = ""
         for col in range(LO_KEY, HI_KEY+1):
@@ -493,15 +504,15 @@ def showmap(grid, layerdata):
                     line += "!"
             else:
                 line += "!"
-        print(("# %s Layer %-6s v=%03d"
+        print(("%s Layer %-6s v=%03d"
             % (line, layerdata[row][LNAME], layerdata[row][LVEL])),
             file=gl.ofile)
 
-    print("#", file=gl.ofile)
-    print("#  Key:", file=gl.ofile)
-    print("#    space = unity-mapped key", file=gl.ofile)
-    print("#    !     = unmapped key", file=gl.ofile)
-    print("#    anything else: see sample layer list above", file=gl.ofile)
+    print(file=gl.ofile)
+    print("Key:", file=gl.ofile)
+    print("  space = unity-mapped key (and not borrowed from another layer)", file=gl.ofile)
+    print("  !     = unmapped key", file=gl.ofile)
+    print("  anything else: see Sample Table above", file=gl.ofile)
 
 
 def emit_keymap(samps, keyLo, keyHi):
@@ -517,11 +528,13 @@ def emit_keymap(samps, keyLo, keyHi):
     if rr_count > 1:
         rr_frac = 1.0/rr_count
     for samp in samps.values():
-        print("  SAMP:%s:%d:%d:%d:\t(%3s - %3s)" % (
-            samp.fname, keyLo, keyHi, samp.mnote,
-            jmidi.mnote_name(keyLo, None),
-            jmidi.mnote_name(keyHi, None)),
-            file=gl.ofile)
+        # We needed this when we used sfk file to generate .sf2 file.
+        # Keep it in case it helps for debugging.
+        # print("  SAMP:%s:%d:%d:%d:\t(%3s - %3s)" % (
+        #     samp.fname, keyLo, keyHi, samp.mnote,
+        #     jmidi.mnote_name(keyLo, None),
+        #     jmidi.mnote_name(keyHi, None)),
+        #     file=gl.ofile)
 
         print("<region>", end=" ", file=gl.sfzf)
         print("sample=%s" % samp.fname, end=" ", file=gl.sfzf)
@@ -553,37 +566,32 @@ def cB2scalefactor(cb):
 
 def emit_map(grid, layerdata):
 
-    print(file=gl.ofile)
-    print("BANKNAME:%s" % BANKNAME, file=gl.ofile)
-    print("DESIGNER:%s" % DESIGNER, file=gl.ofile)
-    print("COPYRIGHT:%s" % COPYRIGHT, file=gl.ofile)
-    print("COMMENT:%s" % COMMENT, file=gl.ofile)
-
-    print(file=gl.ofile)
-    print("PRESET:%s" % PRESETNAME, file=gl.ofile)
-    print(file=gl.ofile)
-    print("RELEASE:%s" % RELEASE, file=gl.ofile)
-
     loVel = 1
-    # LOWEST_LEVEL = 640        # centibels     %%% SHOULD BE CONFIGURED
     lprevl = LOWEST_LEVEL
 
     if len(SFZ_HEADERS):
         # print("HEADERS:", SFZ_HEADERS)
         print("\n".join(SFZ_HEADERS), file=gl.sfzf)
-        print(file=gl.sfzf)
 
     if len(SFZ_CONTROLS):
         # print("CONTROLS:", SFZ_CONTROLS
+        print(file=gl.sfzf)
         print("<control>", file=gl.sfzf)
         print("\n".join(SFZ_CONTROLS), file=gl.sfzf)
+
+    if len(SFZ_GLOBALS):
+        # print("GLOBALS:", SFZ_GLOBALS)
         print(file=gl.sfzf)
+        print("<global>", file=gl.sfzf)
+        print("\n".join(SFZ_GLOBALS), file=gl.sfzf)
 
     if len(SFZ_MASTERS):
         # print("MASTERS:", SFZ_MASTERS)
+        print(file=gl.sfzf)
         print("<master>", file=gl.sfzf)
         print("\n".join(SFZ_MASTERS), file=gl.sfzf)
 
+    # Emit <group> for each velocity layer and <region> for each sample in it
     for row in range(0, len(layerdata)):
     #{
         hiVel  = layerdata[row][LVEL]
@@ -594,12 +602,14 @@ def emit_map(grid, layerdata):
         xfout_lo = layerdata[row][LXFOUT_LO]
         xfout_hi = layerdata[row][LXFOUT_HI]
 
-        print(file=gl.ofile)
-        print("VLAYER:%s:%3d:%3d:%2d" % (
-            layerdata[row][LNAME], loVel, hiVel, latten),       # %%% llevel
-            file=gl.ofile)
+        # We needed this when we used sfk file to generate .sf2 file.
+        # Keep it in case it helps for debugging.
+        # print(file=gl.ofile)
+        # print("VLAYER:%s:%3d:%3d:%2d" % (
+        #     layerdata[row][LNAME], loVel, hiVel, latten),       # %%% llevel
+        #     file=gl.ofile)
 
-        print(file=gl.ofile)
+        print(file=gl.sfzf)
         print("<group>", end=" ", file=gl.sfzf)
         if xfin_lo:
             print("xfin_lovel=%d xfin_hivel=%d" % (xfin_lo, xfin_hi), end=" ", file=gl.sfzf)
@@ -612,7 +622,7 @@ def emit_map(grid, layerdata):
 
         if (latten != 0):
             print("volume=%f" % (-latten/10.0), end=" ")
-        print("ampeg_release=%f" % RELEASE, end=" ")
+        print("ampeg_release=%f" % RELEASE, file=gl.sfzf, end=" ")
 
         if (llevel != 0):
             midVel = (hiVel + loVel) / 2
@@ -633,14 +643,12 @@ def emit_map(grid, layerdata):
         lastSamps = None
 
         for col in range(LO_KEY, HI_KEY+1):
-        #{
             samps = gl.grid[row][col]
             if samps != lastSamps:
                 if lastSamps != None:
                     emit_keymap(lastSamps, firstKey, col-1)
                 lastSamps = samps
                 firstKey = col
-        #}
 
         # handle last unfinished keymap
         if lastSamps != None:
@@ -653,8 +661,6 @@ def emit_map(grid, layerdata):
         # print("FINALS:", SFZ_FINALS)
         print(file=gl.sfzf)
         print("\n".join(SFZ_FINALS), file=gl.sfzf)
-        print(file=gl.sfzf)
-
 
 def convert_int(val, lineno):
     try:
@@ -675,9 +681,8 @@ def kwval(group, lineno):
         sys.exit(1)
     return (kw, val)
 
-def process_cfg(cfg_fname, sfname):
+def process_cfg(cfg_fname, sfname, print_map=True):
     global LAYER_LOC, NOTE_LOC
-    global BANKNAME, DESIGNER, COPYRIGHT, COMMENT
     global LO_KEY, HI_KEY
     global MAX_LAYER_SHIFT, LAYER_SHIFT_COST, EXTEND_LAYER_UP
     global MAX_NOTE_SHIFT, NOTE_SHIFT_COST, EXTEND_NOTE_UP
@@ -685,6 +690,7 @@ def process_cfg(cfg_fname, sfname):
     global LOWEST_LEVEL
     global gl
     global SFZ_HEADERS
+    global SFZ_GLOBALS
     global SFZ_MASTERS
     global SFZ_CONTROLS
     global SFZ_FINALS
@@ -698,15 +704,11 @@ def process_cfg(cfg_fname, sfname):
         sys.exit(1)
 
     # Defaults
-    COMMENT = ""
-    BANKNAME = sfname
-    PRESETNAME = BANKNAME
-    DESIGNER = ""
     CROSSFADE = False
-    COPYRIGHT = ""
     RELEASE = 0.1
     SFZ_HEADERS = []
     SFZ_CONTROLS = []
+    SFZ_GLOBALS = []
     SFZ_MASTERS = []
     SFZ_FINALS = []
 
@@ -740,35 +742,13 @@ def process_cfg(cfg_fname, sfname):
             if len(groups[ix]) == 0:
                 del groups[ix]
 
-        if cmd == "bankname":
-            BANKNAME = " ".join(groups[1:])
-            PRESETNAME = BANKNAME       # default
-            continue
-
-        if cmd == "designer":
-            DESIGNER = " ".join(groups[1:])
-            continue
-
-        if cmd == "copyright":
-            COPYRIGHT = " ".join(groups[1:])
-            continue
-
-        if cmd == "comment":
-            COMMENT += " ".join(groups[1:])
-            continue
-
-        if cmd == "preset":
-            if len(groups) >= 2:
-                PRESETNAME = " ".join(groups[1:])
-            continue
-
         if cmd == "crossfade":
             CROSSFADE = True
             continue
 
         if cmd == "release":
-            if len(groups) < 2:
-                print(("Line %d: expecting release value." % (lineno)), file=sys.stderr)
+            if len(groups) < 2 or len(groups) > 3:
+                print(("Line %d: expecting release value and optional midi note." % (lineno)), file=sys.stderr)
                 sys.exit(1)
             val = groups[1]
             try:
@@ -790,26 +770,25 @@ def process_cfg(cfg_fname, sfname):
                     sys.exit(1)
                 RELEASE_RANGES.append((relnote, relval))
 
-            else:
-                # global release level
-                RELEASE = float(val)
-
             continue
 
         if cmd == "transpose":
             TRANSPOSE = int(groups[1])
             print("TRANSPOSE by", TRANSPOSE, file=sys.stderr)
 
-        if cmd == "header":
+        if cmd == "sfz-header":
             SFZ_HEADERS.append(" ".join(groups[1:]))
 
-        if cmd == "control":
+        if cmd == "sfz-control":
             SFZ_CONTROLS.append(" ".join(groups[1:]))
 
-        if cmd == "global" or cmd == "master":
+        if cmd == "sfz-global":
+            SFZ_GLOBALS.append(" ".join(groups[1:]))
+
+        if cmd == "sfz-master":
             SFZ_MASTERS.append(" ".join(groups[1:]))
 
-        if cmd == "final":
+        if cmd == "sfz-final":
             SFZ_FINALS.append(" ".join(groups[1:]))
 
         if cmd == "layer-opts":
@@ -900,7 +879,6 @@ def process_cfg(cfg_fname, sfname):
             LOWEST_LEVEL = convert_int(groups[1], lineno)
             if (LOWEST_LEVEL < 0):
                 print(("Line %d: lowest-level must not be negative." % (lineno, groups[1:])), file=sys.stderr)
-            print("LOWEST_LEVEL", LOWEST_LEVEL)
             continue
 
         if cmd == "layer":
@@ -924,14 +902,14 @@ def process_cfg(cfg_fname, sfname):
 
                 if kw == "vel":
                     if lvmode and lvmode != "vel":
-                        print(("Line %d: can't mix 'vel' and 'vel-range' in same preset." % (lineno)), file=sys.stderr)
+                        print(("Line %d: can't mix 'vel' and 'vel-range' in same sampleset." % (lineno)), file=sys.stderr)
                         sys.exit(1)
                     lvel = convert_int(val, lineno)
                     lvmode = "vel"
 
                 elif kw == "vel-range":
                     if lvmode and lvmode != "range":
-                        print(("Line %d: can't mix 'vel' and 'vel-range' in same preset." % (lineno)), file=sys.stderr)
+                        print(("Line %d: can't mix 'vel' and 'vel-range' in same sampleset." % (lineno)), file=sys.stderr)
                         sys.exit(1)
                     lrange = convert_int(val, lineno)
                     lvmode = "range"
@@ -999,9 +977,10 @@ def process_cfg(cfg_fname, sfname):
         for (lname, lvel, lrange, latten, llevel) in layers:
             last_lvel += lrange
             layers[ix] = (lname, last_lvel, lrange, latten, llevel)
-            print(("Layer %*s: velocity %3d, range %3d, level %3d"
-                % (gl.lnamelen, lname, last_lvel, lrange, llevel)),
-                file=sys.stderr)
+            if print_map:
+                print(("Layer %*s: velocity %3d, range %3d, level %3d cB"
+                    % (gl.lnamelen, lname, last_lvel, lrange, llevel)),
+                    file=sys.stderr)
             ix += 1
 
     #}
@@ -1009,9 +988,6 @@ def process_cfg(cfg_fname, sfname):
     # build LAYER array
     for (lname, lvel, lrange, latten, llevel) in layers:
         LAYER.append([lname, lvel, latten, llevel, 0, 0, 0, 0])
-
-#}
-
 
 
 # Module initialization
@@ -1027,13 +1003,10 @@ def usage(prog):
     print("                   <sfname>.sfc is the input (config),", file=sys.stderr)
     print("                   <sfname>.sfk is the output (keymap).", file=sys.stderr)
     print("     {sampfile} is any number of sample filenames, with UNIX wildcards", file=sys.stderr)
-    print("     mapfile    is the output file name", file=sys.stderr)
     print(file=sys.stderr)
     print("  Output is ASCII text, and includes a char-graphic keyboard map layout", file=sys.stderr)
     print(file=sys.stderr)
     sys.exit(1)
-
-
 
 
 # Main
@@ -1063,39 +1036,60 @@ if __name__ == "__main__":
         gl.sfzf  = open(zfname, "w")
     except Exception as msg:
         print(msg, file=sys.stderr)
+        if gl.ofile:
+            gl.ofile.close()
         sys.exit(1)
 
     print("Input (control) file:", cfname, file=sys.stderr)
     print("Output (keymap) file:", ofname, file=sys.stderr)
     print("Output (sfz)    file:", zfname, file=sys.stderr)
 
-    process_cfg(cfname, sfname)
+    try:
+        process_cfg(cfname, sfname)
+    except Exception as msg:
+        print(str(msg), file=sys.stderr)
+        gl.ofile.close()
+        gl.sfzf.close()
+        sys.exit(1)
+        
     build_grid(gl.grid)
     load_filenames(args)
     assign_keys()
 
-    if CROSSFADE:
-        emit_map(gl.grid, LAYER)
+    # showmap is no longer needed now that we don't support .sf2,
+    # but the keymap might be nice to look at (in .sfk file.)
+    showmap(gl.grid, LAYER)
 
+    if CROSSFADE:
+        # write sfz file with crossfade
+        emit_map(gl.grid, LAYER)
+        gl.sfzf.close()
+
+        # write another sfz file without crossfade
         zfname = sfname + "-no-xfade.sfz"
-        print("Output-nx (sfz) file:", zfname, file=sys.stderr)
+        print("Output (sfz) file without xfade:", zfname, file=sys.stderr)
         try:
             gl.sfzf  = open(zfname, "w")
         except Exception as msg:
             print(msg, file=sys.stderr)
+            gl.ofile.close()
             sys.exit(1)
 
         gl.grid = []
         gl.samps = {}
         LAYER = []
-        process_cfg(cfname, sfname)
-        CROSSFADE = False
-        build_grid(gl.grid)
-        load_filenames(args)
-        assign_keys()
+        try:
+            process_cfg(cfname, sfname, print_map=False)
+            CROSSFADE = False
+            build_grid(gl.grid)
+            load_filenames(args, print_map=False)
+            assign_keys()
+        except Exception as msg:
+            print(msg, file=sys.stderr)
+            gl.ofile.close()
+            gl.sfzf.close()
+            sys.exit(1)
 
-    # These are no longer needed now that we don't support .sf2,
-    # but the keymap might be nice to look at
-    showmap(gl.grid, LAYER)
+    # build sfz file and (now unused) .sfk file layer sections
     emit_map(gl.grid, LAYER)
 

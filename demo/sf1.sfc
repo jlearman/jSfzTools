@@ -1,24 +1,55 @@
 # keymap config file for use with jMap.py
 
-# Any lines beginning // will be copied directly into the .sfz file
+### SFZ pass-through
+# Keywords beginning "sfz-" pass the rest of the lines straight through to the
+# sfz file, in the given section (header, control, global, final.)
 
-// bankname	sf1
-// designer	me
-// copyright	2005, myself
-// comment	steal this soundfont!
+# Add lines at the beginning of the sfz file
+sfz-header // Crappy rhodes soundfont demo for jSfTools
+sfz-header // Warning: notes cut off at end because samples were poorly cropped.
+sfz-header // copyright:	CC0
+sfz-header // date: 2005
 
-# Specify the file name format.
+# Add sfz <control> section lines
+sfz-control label_cc0 MOD WHEEL
+
+# Add sfz <global> and/or <master> section lines.  Use "master" if you
+# plan to concatenate this sfz with another; otherwise there's no difference.
+sfz-global volume 6 // increase volume 6 dB
+# sfz-master volume 6 // increase volume 6 dB
+
+# Add lines at the end of the sfz file.
+# For example, use this to define a custom curve.
+sfz-final // we're done here
+
+# Use this keyword to create an sfz with velocity crossfades.  A non-crossfade
+# version will also be created (with "-no-xfade" appended to the sf name.)
+# crossfade
+
+# Global transpose
+# transpose 12 // transpose up one octave
+
+# Specify the wave file name format.
 #
 # The sample file name is cut up into parts at natural delimiters
-# like space, underscore, etc (but not dash.)  The next line specifies
+# like space, underscore, etc (but not dash.)  The "format" line specifies
 # where the pertinent parts are: the note and layer names.
 # The .wav extension is always ignored.
 #
-# I always use an underscore as my delimiter so I suggest you do that too.
+# I always use an underscore as the delimiter so I suggest you do that too.
+# Multiple delimiters in a row are treated as a single delimiter.
 #
-# The "loc" is 1 for the first part, 2 for the second, etc.
+# The format line is:
+#   format layer-loc=x note-loc=y
+# where "x" and "y" are location specifiers for velocity layer
+# or MIDI note, respectively.
+#
+# Each "loc" is 1 for the first part, 2 for the second, etc.
 # The "loc" can also be -1 for the last part, -2 for second-
 #   to last, etc.
+#
+# The MIDI note can be specified as a number (MIDI note number)
+# or in ISO note notation, e.g., "Db4" or "C#4".  C4 is Middle C.
 #
 # For example,
 #
@@ -31,105 +62,106 @@
 # example wave file name, as created by jCutSamps.py:
 #
 #   sf1_029__F1_lo.wav
-
 format		layer-loc=-1 note-loc=-2
 
 # Mapping tweakers.  More on this later!
-
 layer-opts	max-shift=2 shift-cost=1 extend-up=y
 note-opts	max-shift=12 shift-cost=2 extend-up=y
 keyboard-range	low-key=C1 high-key=G7
-# for piano, keyboard-range low-key=A0 high-key=C8
-# Middle-C is C4
+# for piano, use "keyboard-range low-key=A0 high-key=C8"
 
-# Preset-specific definitions (currently only one preset allowed)
+# Default release time in seconds (from full volume to -100 dB)
+# You can override this below with specific release times
+# for note ranges.
+release		0.3
 
-    # Start the preset.  Default preset name is the bank
-    # name.  Or you can specify a preset name after "preset"
-    # below.
+# For realistic pianos, there is a silent velocity zone,
+# because a real piano doesn't make any sound until the velocity
+# reaches a certain level.  Use this keyword to set the silent
+# velocity zone.  The value is a MIDI velocity (1-127).
+# Omit this if you want velocity 1 to play a very quiet note.
+# NOTE: NYI
+# lowest-velocity 16
 
-    preset
+# Attenuation for lowest volume, in cB (dB * 10).
+# Normally not needed.  Default is 640.
+# lowest-level 640
 
-    # release time in seconds (from full volume to -100 dB)
+# Layer definitions.  Be sure to have one "layer" line for
+# each layer you sampled, using the same name as in the file
+# name format above.
+#
+# You can specify the top velocity for each layer using
+# "vel=xxx", where xxx is the MIDI velocity.  If you do,
+# you have to set it for each layer.
+#
+# You can leave the velocities all unspecified, and they'll
+# be assigned evenly.
+#
+# Or, you can specify a velocity range for any of the layers.
+# I tend to specify the ranges for the top and bottom layers,
+# and let the program map the others evenly.  But if one layer
+# in the middle happens to sound a lot better than others you
+# might want to map it to a wider range than the program would
+# give, or something like that.  The program allocates any
+# leftover range evenly as possible among any layers with 
+# unspecified ranges.
+#
+# In this example, I map the low layer wider because it works
+# better on my keyboard that way.  Often, the loudest layer
+# honks a bit too much, so I map it to a narrower range.
+# I usually let the program divide up the rest.
+#
+# You can also specify attenuation for each layer, using
+# "atten=xxx", where xxx is in dB times 10.  That is, to
+# attenuate a layer 1 by dB, specify "atten=10".
+# The soundfont player will automatically make low velocities
+# quieter.  Specifying an attenuation can increase or decrease
+# that, but it can also cause "jumps" at layer crossing velocities.
+#
+# A new feature (which still needs work) is to specify the amount
+# by which the layer file was boosted (when normalized), in centiBels
+# (dB times 10).  That is, if you recorded all samples with the same
+# recording gain, and then normalized a layer that peaked at -12dB
+# (normalizing it to zero), then you'd specify
+#
+#    level=120
+#
+# Alternatively, if you recorded a soft layer with the recording
+# gain level 12dB down from the loudest layer, you would specify
+# the value as the difference in gain between this layer and the
+# loudest layer.  NOTE: this feature is supported for the .sfz
+# file only.
+# 
+#
+# ======================================================
+# Layers must be listed from LOWEST to HIGHEST velocity.
+# ======================================================
+#
+#
+# Layer arguments:
+#
+#  First argument is layer name, which is part of the sample file name.
+#  After that come the folowing optional attribute-value pairs, in any order:
+#  
+#    level=xxx	Gain used when normalizing layer (xxx in centiBels)
+#			  That is, if the layer peak level was -6dB and you
+#			  normalized it to 0dB, use "level=60"
+#                     [NOTE: not yet supported for .sf2 files]
+#
+#    atten=xxx	additional constant attenuation for layer (xxx in centiBels)
+#    
+#    vel=xxx	layer's highest velocity (xxx = MIDI velocity)
+#
+#    vel-range=xxx	number of MIDI velocities in this layer.  xxx is a number of
+#                   MIDI velocities, e.g., use "vel-range=32" on a layer if you
+#                   want that layer's velocity to be assigned automatically but
+#                   you want it 32 velocity levels wide.
+#
+#  Notes:
+#    If "vel=xxx" is used on any layer, it must be used on all of them.
+#    You may not use vel and vel-range in the same file.
 
-    release		0.3
-
-    # Layer definitions.  Be sure to have one "layer" line for
-    # each layer you sampled, using the same name as in the file
-    # name format above.
-    #
-    # You can specify the top velocity for each layer using
-    # "vel=xxx", where xxx is the MIDI velocity.  If you do,
-    # you have to set it for each layer.
-    #
-    # You can leave the velocities all unspecified, and they'll
-    # be assigned evenly.
-    #
-    # Or, you can specify a velocity range for any of the layers.
-    # I tend to specify the ranges for the top and bottom layers,
-    # and let the program map the others evenly.  But if one layer
-    # in the middle happens to sound a lot better than others you
-    # might want to map it to a wider range than the program would
-    # give, or something like that.  The program allocates any
-    # leftover range evenly as possible among any layers with 
-    # unspecified ranges.
-    #
-    # In this example, I map the low layer wider because it works
-    # better on my keyboard that way.  Often, the loudest layer
-    # honks a bit too much, so I map it to a narrower range.
-    # I usually let the program divide up the rest.
-    #
-    # You can also specify attenuation for each layer, using
-    # "atten=xxx", where xxx is in dB times 10.  That is, to
-    # attenuate a layer 1 by dB, specify "atten=10".
-    # The soundfont player will automatically make low velocities
-    # quieter.  Specifying an attenuation can increase or decrease
-    # that, but it can also cause "jumps" at layer crossing velocities.
-    #
-    # A new feature (which still needs work) is to specify the amount
-    # by which the layer file was boosted (when normalized), in centiBels
-    # (dB times 10).  That is, if you recorded all samples with the same
-    # recording gain, and then normalized a layer that peaked at -12dB
-    # (normalizing it to zero), then you'd specify
-    #
-    #    level=120
-    #
-    # Alternatively, if you recorded a soft layer with the recording
-    # gain level 12dB down from the loudest layer, you would specify
-    # the value as the difference in gain between this layer and the
-    # loudest layer.  NOTE: this feature is supported for the .sfz
-    # file only.
-    # 
-    #
-    # ======================================================
-    # Layers must be listed from LOWEST to HIGHEST velocity.
-    # ======================================================
-    #
-    #
-    # Layer arguments:
-    #
-    #  First argument is layer name, which is part of the sample file name.
-    #  After that come the folowing optional attribute-value pairs, in any order:
-    #  
-    #    level=xxx	Gain used when normalizing layer (xxx in centiBels)
-    #			  That is, if the layer peak level was -6dB and you
-    #			  normalized it to 0dB, use "level=60"
-    #                     [NOTE: not yet supported for .sf2 files]
-    #
-    #    atten=xxx	additional constant attenuation for layer (xxx in centiBels)
-    #    
-    #    vel=xxx	layer's highest velocity (xxx = MIDI velocity)
-    #
-    #    vel-range=xxx	number of MIDI velocities in this layer.  xxx is a number of
-    #                   MIDI velocities, e.g., use "vel-range=32" on a layer if you
-    #                   want that layer's velocity to be assigned automatically but
-    #                   you want it 32 velocity levels wide.
-    #
-    #  Notes:
-    #    If "vel=xxx" is used on any layer, it must be used on all of them.
-    #    You may not use vel and vel-range in the same file.
-
-
-    layer	lo	vel-range=64
-    layer	mid
-    layer	hi	vel-range=24
+layer	lo	vel-range=64
+layer	mid
+layer	hi	vel-range=24
