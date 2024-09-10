@@ -24,7 +24,7 @@ sfz-final // we're done here
 
 # Use this keyword to create an sfz with velocity crossfades.  A non-crossfade
 # version will also be created (with "-no-xfade" appended to the sf name.)
-# crossfade
+crossfade
 
 # Global transpose
 # transpose 12 // transpose up one octave
