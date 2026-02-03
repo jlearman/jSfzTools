@@ -32,7 +32,7 @@ _noise_delta    = 2.0           # dB, level above initial noise level to find sa
 _dwell_time     = 0.1           # seconds of sample to keep after level reaches noise level
 _lead_time      = 0.0           # seconds to keep before start of note
 _min_duration   = 1.00          # seconds, minimum note duration.
-_max_duration   = 10.5          # seconds, maximum note duration.
+_max_duration   = 24.0          # seconds, maximum note duration.
 
 _folder         = ""
 _fn_prefix      = ""
@@ -281,7 +281,10 @@ def find_end(wave, start_sn, noise, dwell_t, max_t):
         try:
             buf.add(buf, wave.readSample()[0])
         except IndexError:
-            print("  Sample file ends before silence")
+            print(f"  Sample file ends before silence at {sn}")
+            return (start_sn + sn, start_sn + sn, buf.getPeak())
+        except EOFError:
+            print(f"  EOF before end at {sn}")
             return (start_sn + sn, start_sn + sn, buf.getPeak())
         if sn % calc_interval == 0:
             rms = buf.getRms()
