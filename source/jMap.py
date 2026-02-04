@@ -696,6 +696,7 @@ def process_cfg(cfg_fname, sfname, print_map=True):
     global SFZ_FINALS
     global CROSSFADE
     global TRANSPOSE
+    global RELEASE_RANGES
 
     try:
         cfgf = open(cfg_fname, "r")
@@ -723,6 +724,7 @@ def process_cfg(cfg_fname, sfname, print_map=True):
     layers = []
 
     lvmode = None
+    RELEASE_RANGES = []
 
     lineno = 0
     for iline in cfgf.readlines():
@@ -770,6 +772,7 @@ def process_cfg(cfg_fname, sfname, print_map=True):
                     sys.exit(1)
                 RELEASE_RANGES.append((relnote, relval))
 
+            # print(f"RELEASE_RANGES: {RELEASE_RANGES}")
             continue
 
         if cmd == "transpose":
