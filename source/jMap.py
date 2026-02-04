@@ -760,7 +760,9 @@ def process_cfg(cfg_fname, sfname, print_map=True):
                     % (lineno, val)),
                     file=sys.stderr)
                 sys.exit(1)
-            if len(groups) == 3:
+            if len(groups) == 2:
+                RELEASE = relval
+            else:
                 # note range release level (note given is low note of range)
                 val = groups[2]
                 try:
