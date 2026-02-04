@@ -136,8 +136,7 @@ class WaveChunk(Chunk):
 
         self.numSamples = self.data.size // self.fmt.blockAlign
 
-        # self.start = self.inf.tell() ## %%% why doesn't this work ???
-        self.start = 28 + fmt.size
+        self.start = self.inf.tell()
 
     def writeHeader(self, nsamples=0):
         fmt = self.fmt
