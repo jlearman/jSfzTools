@@ -68,7 +68,8 @@ def find_trigger(wave, start_sn, trig_dB):
         try:
             samp = wave.readSample()
         except EOFError:
-            print("indexError")
+            print("EOF encountered while finding trigger")
+            print("(Not a problem if there's a short clunk near the end of the file.)")
             return 0
         except Exception as e:
             print(e)
@@ -272,7 +273,7 @@ def find_end(wave, start_sn, noise, dwell_t, max_t):
     max_t   = int(max_t   * wave.fmt.sampleRate)
     # print("### max_t =", jtime.sm(max_t, wave.fmt.sampleRate))
 
-    buf = jwave.Rmsbuf(wave, 0)
+    buf = jwave.Rmsbuf(wave, calc_interval)
     wave.seekSample(start_sn)
     sn = 0
     limit_sn = None
@@ -288,6 +289,7 @@ def find_end(wave, start_sn, noise, dwell_t, max_t):
             return (start_sn + sn, start_sn + sn, buf.getPeak())
         if sn % calc_interval == 0:
             rms = buf.getRms()
+            # print(f"  RMS {rms:.2f} at {jtime.sm(start_sn + sn, wave.fmt.sampleRate)}")
             if rms < noise:
                 end_sn = start_sn + sn
                 if limit_sn == None:

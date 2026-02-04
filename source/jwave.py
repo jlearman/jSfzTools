@@ -309,8 +309,8 @@ class WaveChunk(Chunk):
         return self.numSamples
 
 class Rmsbuf:
-    def __init__(self, wave, maxlen=0):
-        if maxlen == 0:
+    def __init__(self, wave, maxlen=None):
+        if maxlen == None:
             maxlen = wave.fmt.sampleRate
         self.maxlen = maxlen
         self.calcInterval = wave.fmt.sampleRate // 10 # %%% should be 5
