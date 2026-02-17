@@ -343,6 +343,7 @@ def copy_wave(iwave, start_sn, end_sn, file_num, freq, guess, sn_ratio, peak, du
         ,",", "%4.1f" % peak            \
         ,",", jtime.sm(duration, iwave.fmt.sampleRate) + "s",
         file=_logfile)
+    sys.stdout.flush()
 
     if not _dry_run:
         ofile = open(fname, "wb")
