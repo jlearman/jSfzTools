@@ -51,7 +51,7 @@ Things you'll need:
 * Python, download it from www.python.org and install it.  (Python
  is a scripting language like Perl.)  You may need to add it to your PATH.
 * A little ability to use a command shell like DOS.  (I use `bash`, currently
-  under cygwin though someday I'll probably switch to WSL.)
+  under WSL.)
 * A fair measure of patience and motivation (not just to use these tools, but to create a good sample set!)
 
 Installation:
