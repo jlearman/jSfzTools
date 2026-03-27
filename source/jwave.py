@@ -124,8 +124,9 @@ class WaveChunk(Chunk):
             data.readHeader()
             if data.type == "data":
                 break
-            print("Skipping unexpected WAVE file chunk:", end="")
-            data.printHeader()
+            if data.type != "LIST":
+                print("Skipping unexpected WAVE file chunk:", end="")
+            # data.printHeader()
             self.inf.seek(data.size, 1) # skip this chunk!
             # %%% should save skipped (unrecognized) chunks
         else:

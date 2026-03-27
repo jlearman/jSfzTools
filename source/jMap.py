@@ -34,6 +34,9 @@
 # 2a-4
 #   transpose (for Purgatory Creek that has to be transposed down 12 steps due to diff note/octave convention
 
+# 2a-5
+#   add lovel and hivel to crossfades to use fewer voices
+
 # TODO: add name to group & master.  (Omit master?)
 # TODO: support loop_mode=one_shot (globally or for notes in a region.)  Omit ampeg_release
 # TODO: add "lowest-velocity" for piano low-velocity dead zone
@@ -612,11 +615,11 @@ def emit_map(grid, layerdata):
         print(file=gl.sfzf)
         print("<group>", end=" ", file=gl.sfzf)
         if xfin_lo:
-            print("xfin_lovel=%d xfin_hivel=%d" % (xfin_lo, xfin_hi), end=" ", file=gl.sfzf)
+            print("xfin_lovel=%d xfin_hivel=%d lovel=%d" % (xfin_lo, xfin_hi, xfin_lo), end=" ", file=gl.sfzf)
         else:
             print("lovel=%d" % loVel, end=" ", file=gl.sfzf)
         if xfout_lo:
-            print("xfout_lovel=%d xfout_hivel=%d" % (xfout_lo, xfout_hi), end=" ", file=gl.sfzf)
+            print("xfout_lovel=%d xfout_hivel=%d hivel=%d" % (xfout_lo, xfout_hi, xfout_hi), end=" ", file=gl.sfzf)
         else:
             print("hivel=%d" % hiVel, end=" ", file=gl.sfzf)
 

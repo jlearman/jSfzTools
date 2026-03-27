@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Instead of trimming, just determine the offset and output sfz code
+# Instead of trimming, just determine the offset and output sfz code (if no output dir specified)
 
 # (previously) Trim a sample wave file to remove latency (relative silence before first transient).
 # Suitable for sampled instruments like piano which have a percussive start.
@@ -36,13 +36,11 @@ _default_noise  = -32.0         # dB, default noise level -- FIXME
 
 # tweak parameters
 
-_calcs_per_sec  = 5             # Number of RMS calcs per second, to detect note end
 _lead_crossings = 2             # Number of zero crossings to find start of note
 
 # Operating controls
 
 _dry_run        = False         # if True, don't actually create any files.
-_debug          = False
 _verbose        = False
 
 # find peak level, absolute value
@@ -54,7 +52,7 @@ def find_peak(wave):
     while True:
         try:
             samp = wave.readSample()
-        except IndexError:
+        except EOFError:
             if peak == 0:
                 print("Empty audio file!")
                 sys.exit(1)
@@ -63,10 +61,11 @@ def find_peak(wave):
         if cur > peak:
             peak = cur
             peak_samp_num = samp_num
+        samp_num += 1
 
         # if we haven't hit a new peak in a second or more, we're done
         # TODO: make this configurable in seconds
-        if samp_num > peak_samp_num + 48000:
+        if samp_num > 48000:
             return wave.v2dB(peak)
 
 
@@ -78,7 +77,7 @@ def find_trigger(wave, trig_dB):
     while True:
         try:
             samp = wave.readSample()
-        except IndexError:
+        except EOFError:
             return 0
         if abs(samp[0]) > trigger:
             break;
@@ -295,8 +294,8 @@ def process_sample(inf, outf):
 
     rate = wave.fmt.sampleRate
 
-    if wave.fmt.compCode != 1:
-        print("Compressed formats unsupported")
+    if wave.fmt.compCode != 1 and wave.fmt.compCode != 65534:
+        print("Compressed formats unsupported: %d" % wave.fmt.compCode)
         sys.exit(1)
 
     if _verbose:
@@ -310,15 +309,14 @@ def process_sample(inf, outf):
     peakdb = find_peak(wave)
     trig_db = peakdb + _trig_db
 
-    # 1) find the next peak that exceeds the trigger level
+    # 1) find the first peak that exceeds the trigger level
 
     trig_sn = find_trigger(wave, trig_dB=trig_db)
 
     if trig_sn == 0:
-        return 0                ## EOF, we're done.
+        return 0,0              ## EOF, we're done.
 
     if _verbose:
-        print()
         print("    trig_sn      ", trig_sn, jtime.hmsm(trig_sn, rate))
 
     # 2) Starting from the trigger point, search backwards to find the
@@ -328,21 +326,26 @@ def process_sample(inf, outf):
     # start_sn = find_nth_zero(wave, trig_sn, window_sn, slope=1)
     start_sn = find_start(wave, trig_sn, window_sn, peakdb)
 
-    if not outf:
-        return ((start_sn * 1000)/rate, start_sn);
-
     if _verbose:
         print("    start_sn     ", start_sn, jtime.hmsm(start_sn, rate))
+
+    if not outf:
+        msec_trimmed = int((start_sn * 1000)/rate)
+        if _verbose:
+            print("    cutting %4d msec" % msec_trimmed)
+        return (msec_trimmed, start_sn)
 
     # Back up at most 1 msec to allow room for fade in
     rate = wave.fmt.sampleRate
     filt_start_sn = max(0, start_sn - rate / 1000)
 
     msec_trimmed = ((filt_start_sn * 1000) / rate)
-    print("    trimming %3d msec" % msec_trimmed)
+    if _verbose:
+        print("    trimming %3d msec" % msec_trimmed)
 
     # HERE
-    fade_in_and_copy_wave(wave, outf, filt_start_sn, start_sn, peakdb)
+    if outf:
+        fade_in_and_copy_wave(wave, outf, filt_start_sn, start_sn, peakdb)
 
     t = jtime.end(t)
     if _verbose:
@@ -359,8 +362,11 @@ def usage(prog):
     print(file=sys.stderr)
     print("where:", file=sys.stderr)
     print("  { x } means 'any number of x'", file=sys.stderr)
+    print("  -v for verbose (debug) output", file=sys.stderr)
     print("  -f <outfolder> specifies the output folder for", file=sys.stderr)
     print("     sample files for following input wave files.", file=sys.stderr)
+    print("     If omitted, no output files are produced, instead,")
+    print("     offsets are printed.")
     print("  <wavefile> is a wave file containing a single sample.", file=sys.stderr)
     print("     Unix-style globbing is permitted,", file=sys.stderr)
     print("     that is, you can use '*.wav' or 'samp*/my*foo.wav'.", file=sys.stderr)
@@ -372,6 +378,7 @@ def main(prog, args):
     global _fn_prefix
     global _fn_suffix
     global _pitchlog
+    global _verbose
 
     _folder = None
     prof = False                # don't profile
@@ -389,6 +396,8 @@ def main(prog, args):
     tot_files_trimmed = 0
     max_msecs_trimmed = 0
 
+    histo = collections.defaultdict(int)
+
     while len(args) > 0:
 
         if len(args) > 2 and args[0] == "-f":
@@ -397,16 +406,19 @@ def main(prog, args):
             del args[0]
             del args[0]
 
+        if len(args) > 1 and args[0] == "-v":
+            _verbose = True
+
         if len(args) < 1:
             return rCode
 
         fspec = args[0]
         del args[0]
 
-        histo = collections.defaultdict(int)
 
         for ifname in glob.glob(fspec):
 
+            t2 = jtime.start()
             file_count += 1
             basename = jtrans.tr(ifname, "\\", "/")
             basename = basename.split("/")[-1]          # strip path
@@ -427,7 +439,6 @@ def main(prog, args):
                 except IOError as msg:
                     raise IOError(msg)
 
-            t2 = jtime.start()
             try:
                 if outf:
                     msecs_trimmed = process_sample(inf, outf)
@@ -445,11 +456,19 @@ def main(prog, args):
             tot_msecs_trimmed += msecs_trimmed
             tot_files_trimmed += 1
 
+            if _verbose:
+                print("%d msec trimmed" % msecs_trimmed)
+
             histo[msecs_trimmed] += 1
 
+            sys.stdout.flush()
             if outf:
                 print()
                 print("Elapsed time for %s: " % ifname, jtime.hms(jtime.end(t2), 1))
+
+            inf.close()
+            if outf:
+                outf.close()
 
     if file_count > 1:
         print()
@@ -457,7 +476,7 @@ def main(prog, args):
         print("Average of %3d msec trimmed" % (tot_msecs_trimmed/tot_files_trimmed))
         print("Max     of %3d msec trimmed" % max_msecs_trimmed)
 
-        for ms in range(0, max_msecs_trimmed+1):
+        for ms in range(0, int(max_msecs_trimmed)+1):
             print(ms, histo[ms])
 
     return rCode
