@@ -323,7 +323,6 @@ def process_sample(inf, outf):
     #    first positive sloped zero crossing.  Search at most a fraction of a second.
 
     window_sn = max(0, int(trig_sn - rate/10))
-    # start_sn = find_nth_zero(wave, trig_sn, window_sn, slope=1)
     start_sn = find_start(wave, trig_sn, window_sn, peakdb)
 
     if _verbose:
@@ -356,17 +355,13 @@ def process_sample(inf, outf):
 
 def usage(prog):
     print(file=sys.stderr)
-    print("%s: Trim start of wave file" % prog, file=sys.stderr)
+    print("%s: find offset for note attack in wave file" % prog, file=sys.stderr)
     print(file=sys.stderr)
-    print("  Usage: %s {[-f <outfolder>] {<wavefile>}}" % prog, file=sys.stderr)
+    print("  Usage: %s {<wavefile>}" % prog, file=sys.stderr)
     print(file=sys.stderr)
     print("where:", file=sys.stderr)
     print("  { x } means 'any number of x'", file=sys.stderr)
     print("  -v for verbose (debug) output", file=sys.stderr)
-    print("  -f <outfolder> specifies the output folder for", file=sys.stderr)
-    print("     sample files for following input wave files.", file=sys.stderr)
-    print("     If omitted, no output files are produced, instead,")
-    print("     offsets are printed.")
     print("  <wavefile> is a wave file containing a single sample.", file=sys.stderr)
     print("     Unix-style globbing is permitted,", file=sys.stderr)
     print("     that is, you can use '*.wav' or 'samp*/my*foo.wav'.", file=sys.stderr)
@@ -444,7 +439,7 @@ def main(prog, args):
                     msecs_trimmed = process_sample(inf, outf)
                 else:
                     (msecs_trimmed, start_sn) = process_sample(inf, outf)
-                    print(ifname, start_sn)
+                    print("+", ifname, start_sn)
 
             except IOError as msg:
                 print(msg)
