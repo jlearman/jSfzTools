@@ -438,8 +438,12 @@ def main(prog, args):
                 if outf:
                     msecs_trimmed = process_sample(inf, outf)
                 else:
-                    (msecs_trimmed, start_sn) = process_sample(inf, outf)
-                    print("+", ifname, start_sn)
+                    try:
+                        (msecs_trimmed, start_sn) = process_sample(inf, outf)
+                    except:
+                        print(" ", ifname, "START NOT FOUND")
+                    else:
+                        print("+", ifname, start_sn)
 
             except IOError as msg:
                 print(msg)
