@@ -322,7 +322,7 @@ def process_sample(inf, outf):
     # 2) Starting from the trigger point, search backwards to find the
     #    first positive sloped zero crossing.  Search at most a fraction of a second.
 
-    window_sn = max(0, trig_sn - rate/10)
+    window_sn = max(0, int(trig_sn - rate/10))
     # start_sn = find_nth_zero(wave, trig_sn, window_sn, slope=1)
     start_sn = find_start(wave, trig_sn, window_sn, peakdb)
 
