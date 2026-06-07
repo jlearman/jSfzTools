@@ -4,4 +4,6 @@ junk*
 *.sfk
 demo/Notes/*.wav
 demo/notes
+demo/notes-orig
+pianotest
 *~
