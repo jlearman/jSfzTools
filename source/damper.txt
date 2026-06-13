@@ -1,0 +1,54 @@
+// Half pedaling and grand piano release curve
+
+// Piano release starts long for low notes and gets shorter as we go up.
+ampeg_release_oncc133=1
+ampeg_release_curvecc133=12 // CC133 is MIDI note number.  Use curve #12
+
+// Half-damping (suggested by
+// Andrew <https://github.com/esesur> and Peter <https://github.com/peastman>)
+//
+// The settings here are only valid when certain conditions are met.
+//   1. Using specific player/sampler software such as Sforzand, Sfizz, etc.
+//   2. The Sus Pedal outputs continuous values from 0 to 127.
+//      (e.g., YAMAHA Disklavier.)
+// 1. + 2. : "Half pedaling" is supported.
+// 1. only : "Repedaling" is supported ("poor-man's half-pedaling")
+ampeg_dynamic=1
+ampeg_releasecc64=100
+//
+// Note: ampeg_release_shape seems to behave differently depending on the
+//       player/sampler software. It adjust the release curve shape.
+//       Lower numbers will damp faster, higher numbers damp more slowly.
+// ampeg_release_shape=-6
+// ampeg_release_curvecc64=11 // seems to be the default, for Aria and Sfizz
+//
+// Half-pedaling curve
+// (These values were adjusted using YAMAHA EA1 Disklavier)
+<curve> curve_index=11  // for note
+v000=0
+v032=0
+v042=.1
+v054=.3
+v062=.4
+v064=1
+v127=1
+
+// Piano release starts long for low notes and gets shorter as we go up.
+// Notes starting with F#6 are undamped.
+<curve> curve_index=12  // curve #12 for scaling release based on MIDI note #
+v000=1.2
+v021=1.2 // A0
+v028=1.1 // E1
+v033=1.0 // A1
+v040=.85 // E2
+v045=.70 // A2
+v052=.60 // E3 = 52
+v057=.57 // A3 = 57
+v064=.53 // E4 = 64
+v069=.45 // A4 = 69
+v076=.42 // E5 = 76
+v081=.40 // A5 = 81
+v089=.38 // F6 = 89
+v090=7   // F#6 = 90
+v127=7
+
