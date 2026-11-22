@@ -18,7 +18,7 @@ def get_smpl_chunk(file_path: str):
             riff_tag = f.read(4)
             if riff_tag != b'RIFF':
                 raise ValueError("Not a valid RIFF file")
-            
+
             file_size = struct.unpack("<I", f.read(4))[0]
             wave_tag = f.read(4)
             if verbose:
@@ -36,6 +36,8 @@ def get_smpl_chunk(file_path: str):
                     chunk_data = f.read(chunk_size)
                     return chunk_header + chunk_data
                 else:
+                    if chunk_size % 2 == 1:
+                        chunk_size += 1  # Account for RIFF 2-byte word alignment pad
                     f.seek(chunk_size, 1)
     except Exception as e:
         print(f"Error reading RIFF file: {e}", file=sys.stderr)
@@ -65,11 +67,11 @@ if __name__ == '__main__':
         wav_file_path = args.wav_file_path
         chunk_file_path = args.chunk_file_path
         verbose = args.verbose
-    
+
     chunk_data = get_smpl_chunk(wav_file_path)
 
     if chunk_data == None:
         print(f"SMPL chunk not found in '{wav_file_path}'", file=sys.stderr)
         sys.exit(1)
     with open(chunk_file_path, 'wb') as wf:
-        wf.write(chunk_data)       
+        wf.write(chunk_data)
